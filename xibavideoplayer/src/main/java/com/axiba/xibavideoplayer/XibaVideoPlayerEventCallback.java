@@ -9,36 +9,36 @@ public interface XibaVideoPlayerEventCallback {
     /**
      * 从头开始播放
      */
-    void onPrepare();
+    void onPlayerPrepare();
 
     /**
      * 播放进度更新
-     * @param progress
-     * @param secProgress
-     * @param currentTime
-     * @param totalTime
+     * @param progress      播放百分比
+     * @param secProgress   缓冲百分比
+     * @param currentTime   当前播放位置
+     * @param totalTime     总时长
      */
-    void onProgressUpdate(int progress, int secProgress, int currentTime, int totalTime);
+    void onPlayerProgressUpdate(int progress, int secProgress, int currentTime, int totalTime);
 
     /**
      * 暂停
      */
-    void onPause();
+    void onPlayerPause();
 
     /**
      * 继续播放
      */
-    void onResume();
+    void onPlayerResume();
 
     /**
      * 播放结束
      */
-    void onComplete();
+    void onPlayerComplete();
 
     /**
      * 自动播放完成
      */
-    void onAutoComplete();
+    void onPlayerAutoComplete();
 
     /**
      * 进度变化回调
@@ -64,6 +64,6 @@ public interface XibaVideoPlayerEventCallback {
     /**
      * 出错回调
      */
-    void onError(int what, int extra);
+    void onPlayerError(int what, int extra);
 
 }
