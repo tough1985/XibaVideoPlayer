@@ -45,13 +45,13 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
 
 
     //单例
-    private static XibaMediaManager instence;
+    private static XibaMediaManager instance;
 
-    public static synchronized XibaMediaManager getInstence(){
-        if (instence == null) {
-            instence = new XibaMediaManager();
+    public static synchronized XibaMediaManager getInstance(){
+        if (instance == null) {
+            instance = new XibaMediaManager();
         }
-        return instence;
+        return instance;
     }
 
 

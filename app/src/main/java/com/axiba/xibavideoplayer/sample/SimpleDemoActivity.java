@@ -33,7 +33,8 @@ public class SimpleDemoActivity extends AppCompatActivity {
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                xibaVP.prepareVideo();
+//                xibaVP.prepareVideo();
+                xibaVP.togglePlayPause();
             }
         });
     }
