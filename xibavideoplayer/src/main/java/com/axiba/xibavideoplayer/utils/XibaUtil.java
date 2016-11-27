@@ -3,6 +3,9 @@ package com.axiba.xibavideoplayer.utils;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.util.Log;
+
+import com.axiba.xibavideoplayer.BuildConfig;
 
 import java.util.Formatter;
 import java.util.Locale;
@@ -17,14 +20,14 @@ public class XibaUtil {
      * @param timeMs
      * @return
      */
-    public static String stringForTime(int timeMs){
+    public static String stringForTime(long timeMs){
         if (timeMs <= 0 || timeMs >= 24 * 60 * 60 * 1000) {
             return "00:00";
         }
-        int totalSeconds = timeMs / 1000;
-        int seconds = totalSeconds % 60;
-        int minutes = (totalSeconds / 60) % 60;
-        int hours = totalSeconds / 3600;
+        long totalSeconds = timeMs / 1000;
+        long seconds = totalSeconds % 60;
+        long minutes = (totalSeconds / 60) % 60;
+        long hours = totalSeconds / 3600;
 
         StringBuilder stringBuilder = new StringBuilder();
         Formatter mFormatter = new Formatter(stringBuilder, Locale.getDefault());
@@ -35,6 +38,8 @@ public class XibaUtil {
             return mFormatter.format("%02d:%02d", minutes, seconds).toString();
         }
     }
+
+
     /**
      * wifi是否连接
      * @param context
@@ -45,4 +50,5 @@ public class XibaUtil {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         return networkInfo != null && networkInfo.getType() == connectivityManager.TYPE_WIFI;
     }
+
 }

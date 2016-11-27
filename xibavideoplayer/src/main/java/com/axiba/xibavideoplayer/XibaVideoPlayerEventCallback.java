@@ -18,7 +18,7 @@ public interface XibaVideoPlayerEventCallback {
      * @param currentTime   当前播放位置
      * @param totalTime     总时长
      */
-    void onPlayerProgressUpdate(int progress, int secProgress, int currentTime, int totalTime);
+    void onPlayerProgressUpdate(int progress, int secProgress, long currentTime, long totalTime);
 
     /**
      * 暂停

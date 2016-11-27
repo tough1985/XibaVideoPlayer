@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.ViewGroup;
@@ -38,6 +39,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     public static final int STATE_PREPARING = 1;               //准备中
     public static final int STATE_PLAYING = 2;                  //播放中
     public static final int STATE_PLAYING_BUFFERING_START = 3;  //开始缓冲
+    public static final int STATE_COMPLETE = 4;                    //
     public static final int STATE_PAUSE = 5;                    //暂停
     public static final int STATE_AUTO_COMPLETE = 6;            //自动播放结束
     public static final int STATE_ERROR = 7;                    //错误状态
@@ -163,7 +165,6 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     }
 
     //**********↓↓↓↓↓↓↓↓↓↓ --播放相关的方法 start-- ↓↓↓↓↓↓↓↓↓↓**********
-
     /**
      * 准备播放
      */
@@ -182,9 +183,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                 AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         //屏幕常亮
         ((Activity) getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         //准备播放视频
         XibaMediaManager.getInstance().prepare(url, mapHeadData, mLooping);
 
+        //启动刷新播放进度的timer
         startProgressTimer();
     }
 
@@ -202,7 +205,6 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         //如果当前是普通状态 或者 错误状态 -> 初始化播放视频
         if (mCurrentState == STATE_NORMAL || mCurrentState == STATE_ERROR) {
-
 
             //如果不是本地播放，同时网络状态又不是WIFI
             if (!url.startsWith("file") && !XibaUtil.isWifiConnected(getContext())) {
@@ -230,10 +232,35 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         return true;
     }
 
+    /**
+     * 指定位置开始播放
+     * @param progress
+     */
+    public void seekTo(int progress){
+        if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
+            long seekTime = progress * getDuration() / 100;
+
+            if (XibaMediaManager.getInstance().getMediaPlayer().isPlaying()) {
+                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
+            } else if(mCurrentState == STATE_PAUSE || mCurrentState == STATE_COMPLETE) {
+                if (eventCallback != null) {
+                    eventCallback.onPlayerResume();    //回调继续播放方法
+                }
+                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
+                XibaMediaManager.getInstance().getMediaPlayer().start();
+                setUiWithStateAndScreen(STATE_PLAYING);
+            }
+        }
+    }
+
     //根据播放器状态和屏幕状态设置UI
     public void setUiWithStateAndScreen(int state) {
         mCurrentState = state;
         switch (mCurrentState) {
+
+            case STATE_COMPLETE:
+                cancelProgressTimer();
+                break;
             case STATE_NORMAL:
             case STATE_ERROR:
                 release();
@@ -259,7 +286,28 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         XibaMediaManager.getInstance().releaseMediaPlayer();
         cancelProgressTimer();
         removeTexture();
+        //取消屏幕常亮
+        ((Activity) getContext()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        float x = event.getX();
+        float y = event.getY();
+        switch (event.getAction()) {
+
+            case MotionEvent.ACTION_DOWN:
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                break;
+
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return super.onTouchEvent(event);
+    }
+
     //**********↑↑↑↑↑↑↑↑↑↑ --播放相关的方法 end-- ↑↑↑↑↑↑↑↑↑↑**********
 
 
@@ -291,12 +339,16 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     //**********↓↓↓↓↓↓↓↓↓↓ --IMediaPlayer Listeners override methods start-- ↓↓↓↓↓↓↓↓↓↓**********
     @Override
     public void onVideoSizeChanged(int width, int height) {
+        Log.d(TAG, "onVideoSizeChanged");
         //根据视频宽高比重置播放器大小
         textureView.setVideoSize(new Point(width, height));
     }
 
     @Override
     public void onPrepared() {
+
+        Log.e(TAG, "onPrepared");
+
         if (eventCallback != null) {
             eventCallback.onPlayerPrepare();  //回调准备播放
         }
@@ -305,6 +357,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onAutoCompletion() {
+
+        Log.e(TAG, "onAutoCompletion");
+
         if (eventCallback != null) {
             eventCallback.onPlayerAutoComplete();
         }
@@ -313,24 +368,29 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onCompletion() {
+
+        Log.e(TAG, "onCompletion");
+
         if (eventCallback != null) {
             eventCallback.onPlayerComplete();
         }
-        setUiWithStateAndScreen(STATE_NORMAL);
+        setUiWithStateAndScreen(STATE_COMPLETE);
     }
 
     @Override
     public void onBufferingUpdate(int percent) {
+        Log.d(TAG, "onBufferingUpdate : precent=" + percent);
         mCurrentBufferPercentage = percent;
     }
 
     @Override
     public void onSeekComplete() {
-
+        Log.d(TAG, "onSeekComplete");
     }
 
     @Override
     public void onError(int framework_err, int impl_err) {
+        Log.d(TAG, "onError");
         if (eventCallback != null) {
             eventCallback.onPlayerError(framework_err, impl_err);
         }
@@ -346,6 +406,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onInfo(int what, int extra) {
+        Log.d(TAG, "onInfo: what=" + what + " : extra=" + extra);
         switch (what) {
             case IMediaPlayer.MEDIA_INFO_VIDEO_TRACK_LAGGING:
                 Log.d(TAG, "MEDIA_INFO_VIDEO_TRACK_LAGGING:");
@@ -426,9 +487,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                     || mCurrentState == STATE_PAUSE
                     || mCurrentState == STATE_PLAYING_BUFFERING_START) {
 
-                final int position = getCurrentPositionWhenPlaying();                   //当前播放位置
-                final int duration = getDuration();                                     //总时长
-                final int progress = position * 100 / (duration == 0 ? 1 : duration);   //播放进度
+                final long position = getCurrentPositionWhenPlaying();                   //当前播放位置
+                final long duration = getDuration();                                     //总时长
+                final int progress = (int) (position * 100 / (duration == 0 ? 1 : duration));   //播放进度
 
                 //由于Timer会另开一条线程工作，因此不能操作UI，所以使用Handler让回调方法在主线程工作
                 mHandler.post(new Runnable() {
@@ -445,11 +506,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 获取当前播放位置
      * @return
      */
-    private int getCurrentPositionWhenPlaying() {
-        int position = 0;
+    private long getCurrentPositionWhenPlaying() {
+        long position = 0;
         if (mCurrentState == STATE_PLAYING || mCurrentState == STATE_PAUSE) {
             try {
-                position = (int) XibaMediaManager.getInstance().getMediaPlayer().getCurrentPosition();
+                position = XibaMediaManager.getInstance().getMediaPlayer().getCurrentPosition();
             } catch (IllegalStateException e) {
                 e.printStackTrace();
                 return position;
@@ -461,8 +522,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 获取视频时长
      * @return
      */
-    private int getDuration(){
-        int duration = 0;
+    private long getDuration(){
+        long duration = 0;
 
         try {
             duration = (int) XibaMediaManager.getInstance().getMediaPlayer().getDuration();

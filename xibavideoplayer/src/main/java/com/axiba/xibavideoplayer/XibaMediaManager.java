@@ -6,10 +6,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Surface;
 
 import com.axiba.xibavideoplayer.bean.VideoSource;
 import com.axiba.xibavideoplayer.listener.XibaMediaListener;
+import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -78,6 +80,7 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
             switch (msg.what) {
                 //准备播放器
                 case MESSAGE_PREPARE:
+                    Log.d(TAG, "MediaHandler: MESSAGE_PREPARE");
                     try {
 
                         mediaPlayer.release();
@@ -104,6 +107,7 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                     break;
                 //设置Texture
                 case MESSAGE_SET_DISPLAY:
+                    Log.d(TAG, "MediaHandler: MESSAGE_SET_DISPLAY");
                     if (msg.obj == null) {
                         mediaPlayer.setDisplay(null);
                     } else {
@@ -115,6 +119,7 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                     break;
                 //释放
                 case MESSAGE_RELEASE:
+                    Log.d(TAG, "MediaHandler: MESSAGE_RELEASE");
                     mediaPlayer.release();
                     break;
             }

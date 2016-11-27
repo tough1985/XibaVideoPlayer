@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
@@ -23,6 +24,10 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
     private Button play;
     private TextView currentTimeTV;
     private TextView totalTimeTV;
+    private SeekBar demoSeek;
+
+
+    private boolean isTrackingTouchSeekBar = false;     //是否正在控制SeekBar
 
     String url = "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11086&editionType=default";
 
@@ -35,7 +40,7 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
         play = (Button) findViewById(R.id.demo_play);
         currentTimeTV = (TextView) findViewById(R.id.current_time);
         totalTimeTV = (TextView) findViewById(R.id.total_time);
-
+        demoSeek = (SeekBar) findViewById(R.id.demo_seek);
         xibaVP.setUp(url, 0, new Object[]{});
         xibaVP.setEventCallback(this);
 
@@ -44,6 +49,23 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
             public void onClick(View v) {
 //                xibaVP.prepareVideo();
                 xibaVP.togglePlayPause();
+            }
+        });
+
+        demoSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isTrackingTouchSeekBar = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                xibaVP.seekTo(seekBar.getProgress());
+                isTrackingTouchSeekBar = false;
             }
         });
     }
@@ -63,10 +85,14 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
     }
 
     @Override
-    public void onPlayerProgressUpdate(int progress, int secProgress, int currentTime, int totalTime) {
+    public void onPlayerProgressUpdate(int progress, int secProgress, long currentTime, long totalTime) {
 
         currentTimeTV.setText("currentTime=" + XibaUtil.stringForTime(currentTime) + " : secProgress=" + secProgress);
         totalTimeTV.setText("totalTime=" +  XibaUtil.stringForTime(totalTime));
+        if (!isTrackingTouchSeekBar) {
+            demoSeek.setProgress(progress);
+        }
+        demoSeek.setSecondaryProgress(secProgress);
     }
 
     @Override
