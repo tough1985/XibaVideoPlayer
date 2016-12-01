@@ -25,6 +25,8 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
     private TextView currentTimeTV;
     private TextView totalTimeTV;
     private SeekBar demoSeek;
+    private TextView positionChangingInfoTV;
+    private SeekBar volumeBrightSeek;
 
 
     private boolean isTrackingTouchSeekBar = false;     //是否正在控制SeekBar
@@ -41,6 +43,9 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
         currentTimeTV = (TextView) findViewById(R.id.current_time);
         totalTimeTV = (TextView) findViewById(R.id.total_time);
         demoSeek = (SeekBar) findViewById(R.id.demo_seek);
+        positionChangingInfoTV = (TextView) findViewById(R.id.position_changing_info_TV);
+        volumeBrightSeek = (SeekBar) findViewById(R.id.volume_bright_seek);
+
         xibaVP.setUp(url, 0, new Object[]{});
         xibaVP.setEventCallback(this);
 
@@ -68,6 +73,7 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
                 isTrackingTouchSeekBar = false;
             }
         });
+        demoSeek.setEnabled(false);
     }
 
     @Override
@@ -77,10 +83,11 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
     }
 
     /**
-     * **********↓↓↓↓↓↓↓↓↓↓ --XibaVideoPlayerEventCallback override methods start-- ↓↓↓↓↓↓↓↓↓↓**********
+     * ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ --XibaVideoPlayerEventCallback override methods start-- ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
      */
     @Override
     public void onPlayerPrepare() {
+        demoSeek.setEnabled(true);
         play.setText("暂停");
     }
 
@@ -116,25 +123,68 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
     }
 
     @Override
-    public void onSeekPositionChange(String seekTime, int seekTimePosition, String totalTime, int totalTimeDuration) {
+    public void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration) {
+        if (positionChangingInfoTV.getVisibility() != View.VISIBLE) {
+            positionChangingInfoTV.setVisibility(View.VISIBLE);
+        }
 
+        long seekPosition = seekTimePosition - originPosition;
+        StringBuilder sb = new StringBuilder();
+        if (seekPosition > 0) {
+            sb.append("+");
+        } else if(seekPosition < 0){
+            sb.append("-");
+        }
+        sb.append(XibaUtil.stringForTime(Math.abs(seekTimePosition - originPosition)));
+        positionChangingInfoTV.setText(sb.toString());
+
+        int progress = (int) (seekTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
+        demoSeek.setProgress(progress);
     }
 
     @Override
-    public void onSeekVolumeChange(float percent) {
-
+    public void onChangingPositionEnd() {
+        if (positionChangingInfoTV.getVisibility() != View.GONE) {
+            positionChangingInfoTV.setVisibility(View.GONE);
+        }
     }
 
+    @Override
+    public void onChangingVolume(int percent) {
+        if (volumeBrightSeek.getVisibility() != View.VISIBLE) {
+            volumeBrightSeek.setVisibility(View.VISIBLE);
+        }
+
+        volumeBrightSeek.setProgress(percent);
+    }
 
     @Override
-    public void onSeekBrightnessSlide(float percent) {
+    public void onChangingVolumeEnd() {
+        if (volumeBrightSeek.getVisibility() != View.GONE) {
+            volumeBrightSeek.setVisibility(View.GONE);
+        }
+    }
 
+    @Override
+    public void onChangingBrightness(int percent) {
+        if (volumeBrightSeek.getVisibility() != View.VISIBLE) {
+            volumeBrightSeek.setVisibility(View.VISIBLE);
+        }
+
+        volumeBrightSeek.setProgress(percent);
+    }
+
+    @Override
+    public void onChangingBrightnessEnd() {
+        if (volumeBrightSeek.getVisibility() != View.GONE) {
+            volumeBrightSeek.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void onPlayerError(int what, int extra) {
 
     }
-    //**********↑↑↑↑↑↑↑↑↑↑ --XibaVideoPlayerEventCallback methods end-- ↑↑↑↑↑↑↑↑↑↑**********
+    //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --XibaVideoPlayerEventCallback methods end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 }

@@ -4,11 +4,37 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.axiba.xibavideoplayer.XibaVideoPlayer
-        android:id="@+id/demo_xibaVP"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:background="#99111111"/>
+        android:layout_height="wrap_content">
+        <com.axiba.xibavideoplayer.XibaVideoPlayer
+            android:id="@+id/demo_xibaVP"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:layout_gravity="center"
+            android:background="#99111111"/>
+
+        <TextView
+            android:id="@+id/position_changing_info_TV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@android:color/white"
+            android:visibility="gone"/>
+
+        <SeekBar
+            android:id="@+id/volume_bright_seek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="50dp"
+            android:layout_marginLeft="100dp"
+            android:layout_marginRight="100dp"
+            android:max="100"
+            android:visibility="gone"
+            android:clickable="false"/>
+    </FrameLayout>
+
 
     <SeekBar
         android:id="@+id/demo_seek"

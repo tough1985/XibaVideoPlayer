@@ -1,12 +1,14 @@
 package com.axiba.xibavideoplayer;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.os.Handler;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -62,9 +64,33 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     private ProgressTimerTask progressTimerTask;            //TimerTask
 
-    private int mCurrentBufferPercentage;
+    private int mCurrentBufferPercentage;                   //当前缓冲百分比
 
-    private Handler mHandler;
+    private Handler mHandler;                               //主线程handler
+
+    private int mScreenWidth;   //屏幕宽度
+    private int mScreenHeight;  //屏幕高度
+
+    private float mDownX;       //触摸的X坐标
+    private float mDownY;       //触摸的坐标
+
+    private long mDownPosition;  //手指放下时的播放位置
+    private long mSeekTimePosition; //滑动改变播放位置
+
+    private int mDownVolumn; //手指放下时音量的大小
+    private float mDownBrightness;  //手指放下时的亮度
+
+    private static final int TOUCH_SLOP = 80;   //判定滑动的最小距离
+
+    private int mTouchCurrentFeature = 0;      //touch事件当前的功能
+
+    private static final int CHANGING_POSITION = 1;       //正在改变播放进度
+
+    private static final int CHANGING_VOLUME = 2;         //正在改变音量
+
+    private static final int CHANGING_BRIGHTNESS = 3;       //是否正在改变亮度
+
+
 
     /**
      * 监听是否有外部其他多媒体开始播放
@@ -105,6 +131,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     private void init() {
         mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         mHandler= new Handler();
+
+        mScreenWidth = getContext().getResources().getDisplayMetrics().widthPixels;
+        mScreenHeight = getContext().getResources().getDisplayMetrics().heightPixels;
     }
 
     /**
@@ -297,15 +326,138 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         switch (event.getAction()) {
 
             case MotionEvent.ACTION_DOWN:
+                mDownX = x;
+                mDownY = y;
+
+                mTouchCurrentFeature = 0;
+
                 break;
 
             case MotionEvent.ACTION_MOVE:
+                //移动X，Y方向的距离
+                float deltaX = x - mDownX;      //右移为正，左移为负
+                float deltaY = y - mDownY;      //下移为正，上移为负
+                //移动X，Y方向的绝对值
+                float absDeltaX = Math.abs(deltaX);
+                float absDeltaY = Math.abs(deltaY);
+
+                switch (mTouchCurrentFeature) {
+
+                    //改变播放位置
+                    case CHANGING_POSITION:
+                        long totalTimeDuration = getDuration();
+                        mSeekTimePosition = (long) (mDownPosition + totalTimeDuration * deltaX / mScreenWidth);
+                        if (mSeekTimePosition > totalTimeDuration) {
+                            mSeekTimePosition = totalTimeDuration;
+                        } else if (mSeekTimePosition < 0) {
+                            mSeekTimePosition = 0;
+                        }
+
+                        eventCallback.onChangingPosition(mDownPosition, mSeekTimePosition, totalTimeDuration); //回调播放位置变化
+                        break;
+
+                    //改变音量
+                    case CHANGING_VOLUME:
+
+                        int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);  //系统音量最大值
+                        int deltaV = (int) (max * 3 * (-deltaY) / mScreenHeight);   //变化量，增加的量与滑动方向相反
+
+                        int changedVolume = mDownVolumn + deltaV;   //滑动后的音量
+
+                        if (changedVolume > max) {
+                            changedVolume = max;
+                        } else if (changedVolume < 0) {
+                            changedVolume = 0;
+                        }
+
+                        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, changedVolume, 0); //设置音量
+
+                        int volumePercent = changedVolume * 100 / max;  //当前音量的百分比
+
+                        eventCallback.onChangingVolume(volumePercent);  //回调音量改变方法
+                        break;
+
+                    //改变亮度
+                    case CHANGING_BRIGHTNESS:
+                        float deltaB = -deltaY / mScreenHeight;
+                        float changedBrightness = mDownBrightness + deltaB;
+                        if (changedBrightness > 1.0f) {
+                            changedBrightness = 1.0f;
+                        } else if (changedBrightness < 0.01f) {
+                            changedBrightness = 0.01f;
+                        }
+
+                        WindowManager.LayoutParams wLayoutParams = ((Activity)getContext()).getWindow().getAttributes();
+                        wLayoutParams.screenBrightness = changedBrightness;
+
+                        ((Activity)getContext()).getWindow().setAttributes(wLayoutParams);  //设置亮度，退出后亮度会自动恢复到系统亮度
+
+                        int brightneesPercent = (int) (changedBrightness * 100);    //当前亮度百分比
+                        eventCallback.onChangingBrightness(brightneesPercent);      //回调亮度改变方法
+
+                        break;
+
+                    //如果当前没有给mTouchCurrentFeature添加任何功能，将在这里进行判断
+                    default:
+                        if (absDeltaX >= TOUCH_SLOP) {      //改变播放进度
+                            mTouchCurrentFeature = CHANGING_POSITION;
+                            mDownPosition = getCurrentPositionWhenPlaying();//获取当前的播放位置
+
+                            cancelProgressTimer();
+                        } else if (absDeltaY > TOUCH_SLOP) {
+                            if (mDownX < mScreenWidth * 0.5f) {
+                                mTouchCurrentFeature = CHANGING_BRIGHTNESS; //改变亮度
+
+                                //如果windowManager没有设置过屏幕亮度，默认得到的亮度是-1f
+                                mDownBrightness = ((Activity)getContext()).getWindow().getAttributes().screenBrightness;
+
+                                //如果是默认值 -1f 需要调用Setting获取屏幕亮度
+                                Log.e(TAG, "mDownBrightness=" + mDownBrightness);
+                                if (mDownBrightness <= 0.0f) {
+                                    try {
+                                        ContentResolver cr = getContext().getContentResolver();
+                                        int brightnsee = Settings.System.getInt(cr, Settings.System.SCREEN_BRIGHTNESS);
+                                        mDownBrightness = Float.valueOf(brightnsee) * (1f/255f);
+                                    } catch (Settings.SettingNotFoundException e) {
+                                        mDownBrightness = 0.1f;
+                                    }
+                                }
+
+
+                            } else {
+                                mTouchCurrentFeature = CHANGING_VOLUME;     //改变音量
+                                mDownVolumn = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                            }
+                        }
+                        break;
+                }
+
                 break;
 
             case MotionEvent.ACTION_UP:
+//                if (mTouchCurrentFeature == CHANGING_POSITION) {
+//                    XibaMediaManager.getInstance().getMediaPlayer().seekTo(mSeekTimePosition);
+//                    eventCallback.onChangingPositionEnd();
+//                    startProgressTimer();
+//                }
+
+                switch (mTouchCurrentFeature) {
+                    case CHANGING_POSITION:
+                        XibaMediaManager.getInstance().getMediaPlayer().seekTo(mSeekTimePosition);
+                        eventCallback.onChangingPositionEnd();
+                        startProgressTimer();
+                        break;
+                    case CHANGING_VOLUME:
+                        eventCallback.onChangingVolumeEnd();
+                        break;
+                    case CHANGING_BRIGHTNESS:
+                        eventCallback.onChangingBrightnessEnd();
+                        break;
+                }
                 break;
+
         }
-        return super.onTouchEvent(event);
+        return true;
     }
 
     //**********↑↑↑↑↑↑↑↑↑↑ --播放相关的方法 end-- ↑↑↑↑↑↑↑↑↑↑**********

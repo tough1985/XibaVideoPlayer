@@ -42,24 +42,31 @@ public interface XibaVideoPlayerEventCallback {
 
     /**
      * 进度变化回调
-     * @param seekTime
      * @param seekTimePosition
-     * @param totalTime
      * @param totalTimeDuration
      */
-    void onSeekPositionChange(String seekTime, int seekTimePosition, String totalTime, int totalTimeDuration);
+    void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration);
+
+    /**
+     * 滑动更改进度结束
+     */
+    void onChangingPositionEnd();
 
     /**
      * 调整音量回调
      * @param percent 更改后的音量百分比
      */
-    void onSeekVolumeChange(float percent);
+    void onChangingVolume(int percent);
+
+    void onChangingVolumeEnd();
 
     /**
      * 调整亮度回调
      * @param percent 更改后的亮度百分比
      */
-    void onSeekBrightnessSlide(float percent);
+    void onChangingBrightness(int percent);
+
+    void onChangingBrightnessEnd();
 
     /**
      * 出错回调
