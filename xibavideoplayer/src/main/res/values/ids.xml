@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="fullscreen_id" type="id"/>
+    <item name="fullscreen_container_id" type="id"/>
+    <item name="tinyscreen_id" type="id"/>
+</resources>

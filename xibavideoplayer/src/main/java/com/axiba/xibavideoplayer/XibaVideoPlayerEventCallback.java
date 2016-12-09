@@ -73,4 +73,29 @@ public interface XibaVideoPlayerEventCallback {
      */
     void onPlayerError(int what, int extra);
 
+    /**
+     *
+     */
+    void onEnterFullScreen();
+
+    /**
+     *
+     */
+    void onQuitFullScreen();
+
+    /**
+     * 单击屏幕
+     */
+    void onSingleTap();
+
+    /**
+     * 双击屏幕
+     */
+    void onDoubleTap();
+
+    /**
+     * 点击被锁住的屏幕
+     */
+    void onTouchLockedScreen();
+
 }

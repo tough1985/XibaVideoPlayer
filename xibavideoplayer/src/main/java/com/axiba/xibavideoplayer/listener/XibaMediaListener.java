@@ -20,4 +20,8 @@ public interface XibaMediaListener {
     void onInfo(int what, int extra);
 
     void onVideoSizeChanged(int width, int height);
+
+    void onStart();
+
+    void onPause();
 }

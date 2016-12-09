@@ -1,5 +1,6 @@
 package com.axiba.xibavideoplayer;
 
+import android.graphics.Point;
 import android.media.AudioManager;
 import android.os.HandlerThread;
 import android.os.Handler;
@@ -35,6 +36,8 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
     public static final int MESSAGE_PREPARE = 0;        //准备播放
     public static final int MESSAGE_SET_DISPLAY = 1;    //设置Texture
     public static final int MESSAGE_RELEASE = 2;        //释放资源
+    public static final int MESSAGE_START = 3;
+    public static final int MESSAGE_PAUSE = 4;
 
 
     private IjkMediaPlayer mediaPlayer;         //Ijk播放器
@@ -44,7 +47,10 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
 
     private WeakReference<XibaMediaListener> listener;
 
+    private WeakReference<XibaMediaListener> lastListener;
 
+    public int currentVideoWidth = 0;
+    public int currentVideoHeigth = 0;
 
     //单例
     private static XibaMediaManager instance;
@@ -82,6 +88,9 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                 case MESSAGE_PREPARE:
                     Log.d(TAG, "MediaHandler: MESSAGE_PREPARE");
                     try {
+
+                        currentVideoWidth = 0;
+                        currentVideoHeigth = 0;
 
                         mediaPlayer.release();
                         mediaPlayer = new IjkMediaPlayer();
@@ -121,6 +130,30 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                 case MESSAGE_RELEASE:
                     Log.d(TAG, "MediaHandler: MESSAGE_RELEASE");
                     mediaPlayer.release();
+                    break;
+                //开始
+                case MESSAGE_START:
+                    mediaPlayer.start();
+                    mainThreadHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (listener != null) {
+                                getListener().onStart();
+                            }
+                        }
+                    });
+                    break;
+                //暂停
+                case MESSAGE_PAUSE:
+                    mediaPlayer.pause();
+                    mainThreadHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (listener != null) {
+                                getListener().onPause();
+                            }
+                        }
+                    });
                     break;
             }
         }
@@ -204,6 +237,8 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
 
     @Override
     public void onVideoSizeChanged(IMediaPlayer iMediaPlayer, final int width, final int height, int sar_num, int sar_den){
+        currentVideoWidth = width;
+        currentVideoHeigth = height;
         mainThreadHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -229,6 +264,21 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
             this.listener = null;
         } else {
             this.listener = new WeakReference<XibaMediaListener>(listener);
+        }
+    }
+
+    public XibaMediaListener getLastListener(){
+        if (lastListener == null) {
+            return null;
+        }
+        return lastListener.get();
+    }
+
+    public void setLastListener(XibaMediaListener lastListener){
+        if (lastListener == null) {
+            this.lastListener = null;
+        } else {
+            this.lastListener = new WeakReference<XibaMediaListener>(lastListener);
         }
     }
 
@@ -265,6 +315,31 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
      */
     public void setDisplay(Surface surface){
         mMediaHandler.obtainMessage(MESSAGE_SET_DISPLAY, surface).sendToTarget();
+    }
+
+    /**
+     * 获取视频尺寸
+     */
+    public Point getVideoSize() {
+        if (currentVideoWidth != 0 && currentVideoHeigth != 0) {
+            return new Point(currentVideoWidth, currentVideoHeigth);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 开始播放
+     */
+    public void startPlayer(){
+        mMediaHandler.obtainMessage(MESSAGE_START).sendToTarget();
+    }
+
+    /**
+     * 暂停播放
+     */
+    public void pausePlayer(){
+        mMediaHandler.obtainMessage(MESSAGE_PAUSE).sendToTarget();
     }
     //**********↑↑↑↑↑↑↑↑↑↑ --media methods end-- ↑↑↑↑↑↑↑↑↑↑**********
 }

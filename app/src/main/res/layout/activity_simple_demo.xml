@@ -10,7 +10,7 @@
         <com.axiba.xibavideoplayer.XibaVideoPlayer
             android:id="@+id/demo_xibaVP"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="300dp"
             android:layout_gravity="center"
             android:background="#99111111"/>
 
@@ -36,26 +36,57 @@
     </FrameLayout>
 
 
-    <SeekBar
-        android:id="@+id/demo_seek"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="100"/>
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="20dp">
+        <TextView
+            android:id="@+id/current_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:textColor="@android:color/black"
+            android:layout_centerVertical="true"
+            android:text="00:00"/>
+
+        <TextView
+            android:id="@+id/total_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:textColor="@android:color/black"
+            android:layout_centerVertical="true"
+            android:text="00:00"/>
+
+        <SeekBar
+            android:id="@+id/demo_seek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/total_time"
+            android:layout_toRightOf="@id/current_time"/>
+    </RelativeLayout>
 
     <Button
         android:id="@+id/demo_play"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="play"/>
-    <TextView
-        android:id="@+id/current_time"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 
-    <TextView
-        android:id="@+id/total_time"
+    <Button
+        android:id="@+id/full_screen_BN"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="全屏"/>
+
+    <Button
+        android:id="@+id/tiny_screen_BN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="小屏"/>
 
 
 </LinearLayout>
