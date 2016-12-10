@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -98,6 +99,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     protected XibaVideoPlayerEventCallback eventCallback;   //播放器事件回调接口
 
     private XibaResizeTextureView textureView;              //播放器显示Texture
+    private XibaResizeImageView cacheImageView;
 
     private static Timer UPDATE_PROGRESS_TIMER;             //刷新播放进度的timer
 
@@ -139,14 +141,17 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     private static boolean mIsScreenLocked = false;   //是否锁屏
 
+    private ViewGroup mParent;      //播放器父容器
     private int mIndexInParent = 0;  //在父容器中的索引
-    private ViewGroup.LayoutParams mLayoutParams;
-    private ViewGroup mParent;
+    private ViewGroup.LayoutParams mLayoutParams;   //播放器布局参数
 //    private Drawable mBackgroundDrawable;
-    private int mBackgroundColor = Color.WHITE;
+    private int mBackgroundColor = Color.WHITE; //播放器背景色
 
-    private float originX;
-    private float originY;
+    private float mOriginX;      //播放器x坐标
+    private float mOriginY;      //播放器y坐标
+
+    private Bitmap mCacheBitmap;
+    private boolean mHasTextureUpdated;
 
     /**
      * 监听是否有外部其他多媒体开始播放
@@ -242,15 +247,19 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         textureView = new XibaResizeTextureView(getContext());
 
-
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER);
         textureView.setSurfaceTextureListener(this);
         this.addView(textureView, lp);
-
         textureView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+
+
+        cacheImageView = new XibaResizeImageView(getContext());
+        this.addView(cacheImageView, lp);
+        cacheImageView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+//        cacheImageView.setVisibility(INVISIBLE);
     }
 
     /**
@@ -418,6 +427,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         removeTexture();
         //取消屏幕常亮
         ((Activity) getContext()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        if (mCacheBitmap != null) {
+            mCacheBitmap.recycle();
+            mCacheBitmap = null;
+        }
     }
 
 
@@ -741,12 +755,14 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 全屏播放
      */
     public void startFullScreen(final boolean hasActionBar, final boolean hasStatusBar){
-        if (mCurrentScreen == SCREEN_WINDOW_FULLSCREEN) {
+        if (mCurrentScreen == SCREEN_WINDOW_FULLSCREEN || mCurrentScreen == SCREEN_WINDOW_TINY) {
             return;
         }
 
         //设置屏幕状态
         mCurrentScreen = SCREEN_WINDOW_FULLSCREEN;
+
+        getCacheImageBitmap();  //获取视频截图
 
         //隐藏ActionBar和StatusBar
         XibaUtil.hideSupportActionBar(getContext(), hasActionBar, hasStatusBar);
@@ -794,6 +810,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         } else {
             this.addTexture();
         }
+        showCacheImageView();   //显示视频截图
+
     }
 
     /**
@@ -806,6 +824,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         //显示ActionBar和StatusBar
         XibaUtil.showSupportActionBar(getContext(), mHasActionBar, mHasStatusBar);
+
+        getCacheImageBitmap();  //获取视频截图
 
         //获取contentView
         ViewGroup contentView = getContentView();
@@ -836,6 +856,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         } else {
             this.addTexture();
         }
+
+        showCacheImageView();   //显示视频截图
 
         //设置屏幕状态
         mCurrentScreen = SCREEN_NORMAL;
@@ -965,8 +987,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         //设置屏幕状态
         mCurrentScreen = SCREEN_WINDOW_TINY;
 
-        originX = this.getX();
-        originY = this.getY();
+        getCacheImageBitmap();  //获取视频截图
+
+        mOriginX = this.getX();
+        mOriginY = this.getY();
 
         mParent = ((ViewGroup)this.getParent());    //获取当前父容器
         mIndexInParent = mParent.indexOfChild(this);    //获取在父容器中的索引
@@ -1016,6 +1040,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         }
 
         eventCallback.onEnterTinyScreen();  //调用进入小屏回调事件
+
+        showCacheImageView();   //显示视频截图
     }
 
 
@@ -1026,6 +1052,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         if (mCurrentScreen == SCREEN_NORMAL) {
             return;
         }
+
+        getCacheImageBitmap();  //获取视频截图
 
         //获取contentView
         ViewGroup contentView = getContentView();
@@ -1039,8 +1067,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         }
 
         //还原位置
-        this.setX(originX);
-        this.setY(originY);
+        this.setX(mOriginX);
+        this.setY(mOriginY);
         //还原背景
         this.setBackgroundColor(mBackgroundColor);
 
@@ -1054,11 +1082,38 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         mCurrentScreen = SCREEN_NORMAL;     //设置屏幕尺寸
 
         eventCallback.onQuitTinyScreen();   //调用退出小屏回调事件
+
+        showCacheImageView();   //显示视频截图
     }
 
 
     private ViewGroup getContentView() {
         return (ViewGroup) (XibaUtil.scanForActivity(getContext())).findViewById(Window.ID_ANDROID_CONTENT);
+    }
+
+    /**
+     * 获取切换屏幕时的视频截图
+     */
+    private void getCacheImageBitmap(){
+        if (textureView != null && mHasTextureUpdated) {
+            mCacheBitmap = textureView.getBitmap();
+            mHasTextureUpdated = false;
+        }
+    }
+
+    /**
+     * 当暂停的时候，切换屏幕状态时，显示视频截图，来避免切换之后的黑屏
+     */
+    private void showCacheImageView(){
+        if(mCurrentState == STATE_PAUSE){
+
+            if (mCacheBitmap != null) {
+                cacheImageView.setImageBitmap(mCacheBitmap);
+            }
+
+            cacheImageView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+            cacheImageView.setVisibility(VISIBLE);
+        }
     }
 
     /**
@@ -1117,7 +1172,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
+//        Log.e(TAG, "onSurfaceTextureSizeChanged");
     }
 
     @Override
@@ -1129,6 +1184,14 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+//        Log.e(TAG, "onSurfaceTextureUpdated");
+        if (cacheImageView.getVisibility() == VISIBLE) {
+            cacheImageView.setVisibility(INVISIBLE);
+        }
+
+        if (!mHasTextureUpdated) {
+            mHasTextureUpdated = true;
+        }
 
     }
     //**********↑↑↑↑↑↑↑↑↑↑ --SurfaceTextureListener override methods end-- ↑↑↑↑↑↑↑↑↑↑**********
@@ -1140,6 +1203,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         Log.d(TAG, "onVideoSizeChanged");
         //根据视频宽高比重置播放器大小
         textureView.setVideoSize(new Point(width, height));
+        cacheImageView.setVideoSize(new Point(width, height));
     }
 
     @Override
@@ -1159,6 +1223,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             eventCallback.onPlayerResume();    //回调继续播放方法
         }
         setUiWithStateAndScreen(STATE_PLAYING);
+
+//        if (cacheImageView.getVisibility() == VISIBLE) {
+//            cacheImageView.setVisibility(INVISIBLE);
+//        }
+
     }
 
     @Override
@@ -1167,6 +1236,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             eventCallback.onPlayerPause();    //回调暂停方法
         }
         setUiWithStateAndScreen(STATE_PAUSE);
+
     }
 
     @Override
@@ -1288,6 +1358,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         if (progressTimerTask != null) {
             progressTimerTask.cancel();
         }
+
+        //取消屏幕常亮
+        ((Activity) getContext()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     /**
