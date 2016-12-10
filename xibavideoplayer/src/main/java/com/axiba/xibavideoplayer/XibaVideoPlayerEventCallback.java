@@ -1,5 +1,7 @@
 package com.axiba.xibavideoplayer;
 
+import android.view.ViewGroup;
+
 /**
  * 播放器回调事件接口
  * Created by xiba on 2016/11/27.
@@ -74,14 +76,24 @@ public interface XibaVideoPlayerEventCallback {
     void onPlayerError(int what, int extra);
 
     /**
-     *
+     * 进入全屏回调
      */
-    void onEnterFullScreen();
+    ViewGroup onEnterFullScreen();
 
     /**
-     *
+     * 退出全屏回调
      */
     void onQuitFullScreen();
+
+    /**
+     * 进入小屏回调
+     */
+    void onEnterTinyScreen();
+
+    /**
+     * 退出小屏回调
+     */
+    void onQuitTinyScreen();
 
     /**
      * 单击屏幕

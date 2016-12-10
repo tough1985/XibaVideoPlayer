@@ -91,7 +91,6 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
 
                         currentVideoWidth = 0;
                         currentVideoHeigth = 0;
-
                         mediaPlayer.release();
                         mediaPlayer = new IjkMediaPlayer();
                         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);

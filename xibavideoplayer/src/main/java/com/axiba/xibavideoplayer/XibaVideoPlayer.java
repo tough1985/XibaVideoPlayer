@@ -3,7 +3,12 @@ package com.axiba.xibavideoplayer;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.res.TypedArray;
+import android.content.res.XmlResourceParser;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Handler;
 import android.content.Context;
 import android.graphics.Point;
@@ -12,9 +17,11 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Parcelable;
 import android.provider.Settings;
+import android.support.annotation.XmlRes;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Xml;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -38,6 +45,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.xml.namespace.NamespaceContext;
+
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
 /**
@@ -46,6 +55,8 @@ import tv.danmaku.ijk.media.player.IMediaPlayer;
 public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceTextureListener, XibaMediaListener {
 
     public static final String TAG = XibaVideoPlayer.class.getSimpleName();
+
+    public static final String NAMESPACE = "http://schemas.android.com/apk/res/android";
 
     public static final int FULLSCREEN_ID = R.id.fullscreen_id;
     public static final int TINYSCREEN_ID = R.id.tinyscreen_id;
@@ -128,6 +139,15 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     private static boolean mIsScreenLocked = false;   //是否锁屏
 
+    private int mIndexInParent = 0;  //在父容器中的索引
+    private ViewGroup.LayoutParams mLayoutParams;
+    private ViewGroup mParent;
+//    private Drawable mBackgroundDrawable;
+    private int mBackgroundColor = Color.WHITE;
+
+    private float originX;
+    private float originY;
+
     /**
      * 监听是否有外部其他多媒体开始播放
      */
@@ -158,6 +178,13 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     public XibaVideoPlayer(Context context, AttributeSet attrs) {
         super(context, attrs);
+        String background = attrs.getAttributeValue(NAMESPACE, "background");
+        Log.e(TAG, "background = " + background);
+
+        if (background != null) {
+            mBackgroundColor = Color.parseColor(background);
+        }
+
         init();
     }
 
@@ -211,19 +238,19 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 添加texture
      */
     private void addTexture() {
-        if (this.getChildCount() > 0) {
-            this.removeAllViews();
-        }
+        removeTexture();
 
         textureView = new XibaResizeTextureView(getContext());
 
-        textureView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER);
         textureView.setSurfaceTextureListener(this);
         this.addView(textureView, lp);
+
+        textureView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
     }
 
     /**
@@ -261,6 +288,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onWindowSystemUiVisibilityChanged(int visible) {
+
         super.onWindowSystemUiVisibilityChanged(visible);
     }
 
@@ -584,81 +612,187 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --处理触摸事件 end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
+//    /**
+//     * 全屏播放
+//     */
+//    public void startFullScreen(ViewGroup fullScreenContainer, final boolean hasActionBar, final boolean hasStatusBar){
+//
+//        if (mCurrentScreen == SCREEN_WINDOW_FULLSCREEN) {
+//            return;
+//        }
+//
+//        //移出当前的TextureView
+//        if (getChildCount() > 0) {
+//            removeAllViews();
+//        }
+//
+//        mHasActionBar = hasActionBar;
+//        mHasStatusBar = hasStatusBar;
+//
+//        //隐藏ActionBar和StatusBar
+//        XibaUtil.hideSupportActionBar(getContext(), hasActionBar, hasStatusBar);
+//        try {
+//
+//            //通过反射的方式创建一个Player
+//            Constructor<XibaVideoPlayer> constructor = XibaVideoPlayer.class.getConstructor(Context.class);
+//            XibaVideoPlayer fullScreenPlayer = constructor.newInstance(getContext());
+//            fullScreenPlayer.setBackgroundColor(Color.BLACK);   //设置背景色
+//            fullScreenPlayer.setId(FULLSCREEN_ID);  //设置ID
+//
+//            //将全屏播放器放到全屏容器之中
+//            ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+//                    ViewGroup.LayoutParams.MATCH_PARENT,
+//                    ViewGroup.LayoutParams.MATCH_PARENT);
+//            fullScreenContainer.addView(fullScreenPlayer, 0, layoutParams);
+//
+//            //如果容器没有id，设置一个ID给容器
+//            fullScreenContainerID = fullScreenContainer.getId();
+//            if (fullScreenContainerID == NO_ID) {
+//                fullScreenContainerID = R.id.fullscreen_container_id;
+//                fullScreenContainer.setId(fullScreenContainerID);
+//            }
+//
+//            //将全屏容器添加到contentView中
+//            ViewGroup contentView = getContentView();
+//            FrameLayout.LayoutParams contentViewLp = new FrameLayout.LayoutParams(
+//                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
+//            );
+//            contentView.addView(fullScreenContainer,contentViewLp);
+//
+//            //旋转屏幕
+//            OrientationUtils mOrientationUtils = new OrientationUtils((Activity) getContext());
+//            mOrientationUtils.setOrientationLand();
+//
+//            //初始化全屏播放器
+//            fullScreenPlayer.setUp(url, SCREEN_WINDOW_FULLSCREEN, objects);
+//            fullScreenPlayer.setEventCallback(this.eventCallback);
+//            fullScreenPlayer.setUiWithStateAndScreen(mCurrentState);
+//            fullScreenPlayer.addTexture();
+//
+//            //设置当前工作的监听为全屏监听
+//            XibaMediaManager.getInstance().setLastListener(this);
+//            XibaMediaManager.getInstance().setListener(fullScreenPlayer);
+//
+//            //设置屏幕状态
+//            mCurrentScreen = SCREEN_WINDOW_FULLSCREEN;
+//
+//            //进入全屏事件回调
+//            eventCallback.onEnterFullScreen();
+//
+//        } catch (NoSuchMethodException e) {
+//            e.printStackTrace();
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (InstantiationException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+    //    /**
+//     * 恢复默认
+//     */
+//    public void quitFullScreen(){
+//        if (mCurrentScreen == SCREEN_NORMAL) {
+//            return;
+//        }
+//
+//        //显示ActionBar和StatusBar
+//        XibaUtil.showSupportActionBar(getContext(), mHasActionBar, mHasStatusBar);
+//
+//
+//
+//        //获取contentView
+//        ViewGroup contentView = getContentView();
+//
+//        //获取全屏容器
+//        ViewGroup fullScreenContainer = (ViewGroup) contentView.findViewById(fullScreenContainerID);
+//
+//        if (fullScreenContainer != null) {
+//            //通过id获取全屏播放器
+//            View oldF = fullScreenContainer.findViewById(FULLSCREEN_ID);
+//            XibaVideoPlayer fullScreenPlayer;
+//
+//            if (oldF != null) {
+//                fullScreenPlayer = (XibaVideoPlayer) oldF;
+//                this.setUiWithStateAndScreen(fullScreenPlayer.getCurrentState());
+//                eventCallback.onQuitFullScreen();
+//                fullScreenContainer.removeView(fullScreenPlayer);
+//            }
+//
+//            contentView.removeView(fullScreenContainer);
+//        }
+//
+//        //旋转屏幕
+//        OrientationUtils mOrientationUtils = new OrientationUtils((Activity) getContext());
+//        mOrientationUtils.setOrientationPort();
+//
+//        this.addTexture();
+//
+//
+//        XibaMediaManager.getInstance().setLastListener(null);
+//        XibaMediaManager.getInstance().setListener(this);
+//
+//        mCurrentScreen = SCREEN_NORMAL;
+//    }
+
     /**
      * 全屏播放
      */
-    public void startFullScreen(ViewGroup fullScreenContainer, final boolean hasActionBar, final boolean hasStatusBar){
-
+    public void startFullScreen(final boolean hasActionBar, final boolean hasStatusBar){
         if (mCurrentScreen == SCREEN_WINDOW_FULLSCREEN) {
             return;
         }
 
-        //移出当前的TextureView
-        if (getChildCount() > 0) {
-            removeAllViews();
-        }
+        //设置屏幕状态
+        mCurrentScreen = SCREEN_WINDOW_FULLSCREEN;
+
+        //隐藏ActionBar和StatusBar
+        XibaUtil.hideSupportActionBar(getContext(), hasActionBar, hasStatusBar);
 
         mHasActionBar = hasActionBar;
         mHasStatusBar = hasStatusBar;
 
-        //隐藏ActionBar和StatusBar
-        XibaUtil.hideSupportActionBar(getContext(), hasActionBar, hasStatusBar);
-        try {
+        //进入全屏事件回调
+        ViewGroup fullScreenContainer = eventCallback.onEnterFullScreen();
 
-            //通过反射的方式创建一个Player
-            Constructor<XibaVideoPlayer> constructor = XibaVideoPlayer.class.getConstructor(Context.class);
-            XibaVideoPlayer fullScreenPlayer = constructor.newInstance(getContext());
-            fullScreenPlayer.setBackgroundColor(Color.BLACK);   //设置背景色
-            fullScreenPlayer.setId(FULLSCREEN_ID);  //设置ID
+        mParent = ((ViewGroup)this.getParent());    //获取当前父容器
+        mIndexInParent = mParent.indexOfChild(this);    //获取在父容器中的索引
+        mLayoutParams = this.getLayoutParams();     //获取当前的布局参数
+        ((ViewGroup)this.getParent()).removeView(this);     //将播放器从当前容器中移出
 
-            //将全屏播放器放到全屏容器之中
-            ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT);
-            fullScreenContainer.addView(fullScreenPlayer, 0, layoutParams);
+        this.setBackgroundColor(Color.BLACK);   //设置背景色
 
-            //如果容器没有id，设置一个ID给容器
-            fullScreenContainerID = fullScreenContainer.getId();
-            if (fullScreenContainerID == NO_ID) {
-                fullScreenContainerID = R.id.fullscreen_container_id;
-                fullScreenContainer.setId(fullScreenContainerID);
-            }
-            
-            //将全屏容器添加到contentView中
-            ViewGroup contentView = getContentView();
-            FrameLayout.LayoutParams contentViewLp = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
-            );
-            contentView.addView(fullScreenContainer,contentViewLp);
+        //将全屏播放器放到全屏容器之中
+        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        fullScreenContainer.addView(XibaVideoPlayer.this, 0, layoutParams);
 
-            //旋转屏幕
-            OrientationUtils mOrientationUtils = new OrientationUtils((Activity) getContext());
-            mOrientationUtils.setOrientationLand();
+        //如果容器没有id，设置一个ID给容器
+        fullScreenContainerID = fullScreenContainer.getId();
+        if (fullScreenContainerID == NO_ID) {
+            fullScreenContainerID = R.id.fullscreen_container_id;
+            fullScreenContainer.setId(fullScreenContainerID);
+        }
 
-            //初始化全屏播放器
-            fullScreenPlayer.setUp(url, SCREEN_WINDOW_FULLSCREEN, objects);
-            fullScreenPlayer.setEventCallback(this.eventCallback);
-            fullScreenPlayer.setUiWithStateAndScreen(mCurrentState);
-            fullScreenPlayer.addTexture();
+        //将全屏容器添加到contentView中
+        ViewGroup contentView = getContentView();
+        FrameLayout.LayoutParams contentViewLp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
+        );
+        contentView.addView(fullScreenContainer, contentViewLp);
 
-            //设置当前工作的监听为全屏监听
-            XibaMediaManager.getInstance().setLastListener(this);
-            XibaMediaManager.getInstance().setListener(fullScreenPlayer);
+        //旋转屏幕
+        OrientationUtils mOrientationUtils = new OrientationUtils((Activity) getContext());
+        mOrientationUtils.setOrientationLand();
 
-            //设置屏幕状态
-            mCurrentScreen = SCREEN_WINDOW_FULLSCREEN;
-
-            //进入全屏事件回调
-            eventCallback.onEnterFullScreen();
-
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        //改变texture尺寸
+        if (textureView != null) {
+            this.textureView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+        } else {
+            this.addTexture();
         }
     }
 
@@ -673,8 +807,6 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         //显示ActionBar和StatusBar
         XibaUtil.showSupportActionBar(getContext(), mHasActionBar, mHasStatusBar);
 
-
-
         //获取contentView
         ViewGroup contentView = getContentView();
 
@@ -682,33 +814,142 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         ViewGroup fullScreenContainer = (ViewGroup) contentView.findViewById(fullScreenContainerID);
 
         if (fullScreenContainer != null) {
-            //通过id获取全屏播放器
-            View oldF = fullScreenContainer.findViewById(FULLSCREEN_ID);
-            XibaVideoPlayer fullScreenPlayer;
-
-            if (oldF != null) {
-                fullScreenPlayer = (XibaVideoPlayer) oldF;
-                this.setUiWithStateAndScreen(fullScreenPlayer.getCurrentState());
-                eventCallback.onQuitFullScreen();
-                fullScreenContainer.removeView(fullScreenPlayer);
-            }
-
-            contentView.removeView(fullScreenContainer);
+            fullScreenContainer.removeView(this);           //将播放器从全屏父容器中移出
+            contentView.removeView(fullScreenContainer);    //将父容器从ContentView中移出
         }
+
+        if (mParent != null) {
+            mParent.addView(this, mIndexInParent, mLayoutParams);   //将播放器添加到原来的容器中
+        }
+
+        this.setBackgroundColor(mBackgroundColor);  //还原背景
 
         //旋转屏幕
         OrientationUtils mOrientationUtils = new OrientationUtils((Activity) getContext());
         mOrientationUtils.setOrientationPort();
 
-        this.addTexture();
+        eventCallback.onQuitFullScreen();   //调用退出全屏回调事件
 
-        XibaMediaManager.getInstance().setLastListener(null);
-        XibaMediaManager.getInstance().setListener(this);
+        //改变texture尺寸
+        if (textureView != null) {
+            this.textureView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+        } else {
+            this.addTexture();
+        }
 
+        //设置屏幕状态
         mCurrentScreen = SCREEN_NORMAL;
-
-
     }
+
+//    /**
+//     * 小屏播放
+//     * @param size 小屏的尺寸
+//     * @param x 小屏左上角的x坐标
+//     * @param y 小屏左上角的y坐标
+//     */
+//    public void startTinyScreen(Point size, float x, float y, boolean canMove){
+//        if (mCurrentScreen == SCREEN_WINDOW_TINY || mCurrentScreen == SCREEN_WINDOW_FULLSCREEN) {
+//            return;
+//        }
+//
+//        //移出当前的TextureView
+//        if (getChildCount() > 0) {
+//            removeAllViews();
+//        }
+//
+//        try {
+//            //通过反射的方式创建一个Player
+//            Constructor<XibaVideoPlayer> constructor = XibaVideoPlayer.class.getConstructor(Context.class);
+//            XibaVideoPlayer tinyScreenPlayer = constructor.newInstance(getContext());
+//            tinyScreenPlayer.setBackgroundColor(Color.BLACK);   //设置背景色
+//            tinyScreenPlayer.setId(TINYSCREEN_ID);  //设置ID
+//
+//            //将小屏添加到contentView中
+//            ViewGroup contentView = getContentView();
+//            FrameLayout.LayoutParams contentViewLp = new FrameLayout.LayoutParams(size.x, size.y);
+//
+//            //获取contentView的宽高
+//            int contentWidth = contentView.getMeasuredWidth();
+//            int contentHeight = contentView.getMeasuredHeight();
+//
+//            //如果小屏左上角的x坐标超出了屏幕，修正x
+//            if (x + size.x > contentWidth) {
+//                x = contentWidth - size.x;
+//            }
+//
+//            //如果小屏左上角的y坐标超出了屏幕，修正y
+//            if (y + size.y > contentHeight) {
+//                y = contentHeight - size.y;
+//            }
+//
+//            //设置小屏幕初始化的位置
+//            tinyScreenPlayer.setX(x);
+//            tinyScreenPlayer.setY(y);
+//
+////            contentViewLp.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+//
+//            //将小屏幕添加到ContentView中
+//            contentView.addView(tinyScreenPlayer, contentViewLp);
+//
+//            //初始化小屏播放器
+//            tinyScreenPlayer.setUp(url, SCREEN_WINDOW_TINY, objects);
+//            tinyScreenPlayer.setEventCallback(this.eventCallback);
+//            tinyScreenPlayer.setUiWithStateAndScreen(mCurrentState);
+//            tinyScreenPlayer.addTexture();
+//
+//            //如果设置小屏幕可以移动，添加触摸监听
+//            if (canMove) {
+//                tinyScreenPlayer.setOnTouchListener(new TinyWindowOnTouchListener());
+//            }
+//
+//            //设置当前工作的监听为小屏监听
+//            XibaMediaManager.getInstance().setLastListener(this);
+//            XibaMediaManager.getInstance().setListener(tinyScreenPlayer);
+//
+//            //设置屏幕状态
+//            mCurrentScreen = SCREEN_WINDOW_TINY;
+//
+//        } catch (NoSuchMethodException e) {
+//            e.printStackTrace();
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (InstantiationException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
+
+//    /**
+//     * 退出小屏
+//     */
+//    public void quitTinyScreen(){
+//        if (mCurrentScreen == SCREEN_NORMAL) {
+//            return;
+//        }
+//
+//        //获取contentView
+//        ViewGroup contentView = getContentView();
+//
+//        //通过id获取小屏播放器
+//        View oldT = contentView.findViewById(R.id.tinyscreen_id);
+//        XibaVideoPlayer tinyScreenPlayer;
+//
+//        //移除小屏播放器
+//        if (oldT != null) {
+//            tinyScreenPlayer = (XibaVideoPlayer) oldT;
+//            this.setUiWithStateAndScreen(tinyScreenPlayer.getCurrentState());
+//            contentView.removeView(tinyScreenPlayer);
+//        }
+//
+//        this.addTexture();
+//
+//        XibaMediaManager.getInstance().setLastListener(null);
+//        XibaMediaManager.getInstance().setListener(this);
+//
+//        mCurrentScreen = SCREEN_NORMAL;
+//    }
 
     /**
      * 小屏播放
@@ -721,74 +962,62 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             return;
         }
 
-        //移出当前的TextureView
-        if (getChildCount() > 0) {
-            removeAllViews();
+        //设置屏幕状态
+        mCurrentScreen = SCREEN_WINDOW_TINY;
+
+        originX = this.getX();
+        originY = this.getY();
+
+        mParent = ((ViewGroup)this.getParent());    //获取当前父容器
+        mIndexInParent = mParent.indexOfChild(this);    //获取在父容器中的索引
+        mLayoutParams = this.getLayoutParams();     //获取当前的布局参数
+        mParent.removeView(this);     //将播放器从当前容器中移出
+
+        this.setBackgroundColor(Color.BLACK);   //设置背景色
+
+        //创建一个空View在原来的位置，不然布局会发生变化
+        mParent.addView(new View(getContext()), mIndexInParent, mLayoutParams);
+
+        //将小屏添加到contentView中
+        ViewGroup contentView = getContentView();
+        FrameLayout.LayoutParams contentViewLp = new FrameLayout.LayoutParams(size.x, size.y);
+
+        //获取contentView的宽高
+        int contentWidth = contentView.getMeasuredWidth();
+        int contentHeight = contentView.getMeasuredHeight();
+
+        //如果小屏左上角的x坐标超出了屏幕，修正x
+        if (x + size.x > contentWidth) {
+            x = contentWidth - size.x;
         }
 
-        try {
-            //通过反射的方式创建一个Player
-            Constructor<XibaVideoPlayer> constructor = XibaVideoPlayer.class.getConstructor(Context.class);
-            XibaVideoPlayer tinyScreenPlayer = constructor.newInstance(getContext());
-            tinyScreenPlayer.setBackgroundColor(Color.BLACK);   //设置背景色
-            tinyScreenPlayer.setId(TINYSCREEN_ID);  //设置ID
-
-            //将小屏添加到contentView中
-            ViewGroup contentView = getContentView();
-            FrameLayout.LayoutParams contentViewLp = new FrameLayout.LayoutParams(size.x, size.y);
-
-            //获取contentView的宽高
-            int contentWidth = contentView.getMeasuredWidth();
-            int contentHeight = contentView.getMeasuredHeight();
-
-            //如果小屏左上角的x坐标超出了屏幕，修正x
-            if (x + size.x > contentWidth) {
-                x = contentWidth - size.x;
-            }
-
-            //如果小屏左上角的y坐标超出了屏幕，修正y
-            if (y + size.y > contentHeight) {
-                y = contentHeight - size.y;
-            }
-
-            //设置小屏幕初始化的位置
-            tinyScreenPlayer.setX(x);
-            tinyScreenPlayer.setY(y);
-
-//            contentViewLp.gravity = Gravity.BOTTOM | Gravity.RIGHT;
-
-            //将小屏幕添加到ContentView中
-            contentView.addView(tinyScreenPlayer, contentViewLp);
-
-            //初始化小屏播放器
-            tinyScreenPlayer.setUp(url, SCREEN_WINDOW_TINY, objects);
-            tinyScreenPlayer.setEventCallback(this.eventCallback);
-            tinyScreenPlayer.setUiWithStateAndScreen(mCurrentState);
-            tinyScreenPlayer.addTexture();
-
-            //如果设置小屏幕可以移动，添加触摸监听
-            if (canMove) {
-                tinyScreenPlayer.setOnTouchListener(new TinyWindowOnTouchListener());
-            }
-
-            //设置当前工作的监听为小屏监听
-            XibaMediaManager.getInstance().setLastListener(this);
-            XibaMediaManager.getInstance().setListener(tinyScreenPlayer);
-
-            //设置屏幕状态
-            mCurrentScreen = SCREEN_WINDOW_TINY;
-
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        //如果小屏左上角的y坐标超出了屏幕，修正y
+        if (y + size.y > contentHeight) {
+            y = contentHeight - size.y;
         }
 
+        //设置小屏幕初始化的位置
+        this.setX(x);
+        this.setY(y);
+
+        //将小屏幕添加到ContentView中
+        contentView.addView(this, contentViewLp);
+
+        //改变texture尺寸
+        if (textureView != null) {
+            this.textureView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+        } else {
+            this.addTexture();
+        }
+
+        //如果设置小屏幕可以移动，添加触摸监听
+        if (canMove) {
+            this.setOnTouchListener(new TinyWindowOnTouchListener());
+        }
+
+        eventCallback.onEnterTinyScreen();  //调用进入小屏回调事件
     }
+
 
     /**
      * 退出小屏
@@ -801,25 +1030,31 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         //获取contentView
         ViewGroup contentView = getContentView();
 
-        //通过id获取小屏播放器
-        View oldT = contentView.findViewById(R.id.tinyscreen_id);
-        XibaVideoPlayer tinyScreenPlayer;
-
         //移除小屏播放器
-        if (oldT != null) {
-            tinyScreenPlayer = (XibaVideoPlayer) oldT;
-            this.setUiWithStateAndScreen(tinyScreenPlayer.getCurrentState());
-            contentView.removeView(tinyScreenPlayer);
+        contentView.removeView(this);
+
+        if (mParent != null) {
+            mParent.removeViewAt(mIndexInParent);   //移出占位用的View
+            mParent.addView(this, mIndexInParent, mLayoutParams);   //将播放器添加回原来的容器
         }
 
-        this.addTexture();
+        //还原位置
+        this.setX(originX);
+        this.setY(originY);
+        //还原背景
+        this.setBackgroundColor(mBackgroundColor);
 
-        XibaMediaManager.getInstance().setLastListener(null);
-        XibaMediaManager.getInstance().setListener(this);
+        //改变texture尺寸
+        if (textureView != null) {
+            this.textureView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
+        } else {
+            this.addTexture();
+        }
 
-        mCurrentScreen = SCREEN_NORMAL;
+        mCurrentScreen = SCREEN_NORMAL;     //设置屏幕尺寸
+
+        eventCallback.onQuitTinyScreen();   //调用退出小屏回调事件
     }
-
 
 
     private ViewGroup getContentView() {
@@ -864,10 +1099,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             quitFullScreen();
             return true;
         }
-//        if (mCurrentScreen == SCREEN_WINDOW_TINY) {
-//            quitTinyScreen();
-//            return true;
-//        }
+        if (mCurrentScreen == SCREEN_WINDOW_TINY) {
+            quitTinyScreen();
+            return true;
+        }
         return false;
     }
 

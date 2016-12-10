@@ -53,6 +53,8 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
 
     String url = "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11086&editionType=default";
 
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,10 +91,8 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
 
                 if (xibaVP.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                     xibaVP.quitTinyScreen();
-                    tinyScreenBN.setText("小屏");
                 } else {
                     xibaVP.startTinyScreen(new Point(500, 300), 600, 1400, true);
-                    tinyScreenBN.setText("退出小屏");
                 }
             }
         });
@@ -281,14 +281,42 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
     }
 
     @Override
-    public void onEnterFullScreen() {
+    public ViewGroup onEnterFullScreen() {
+        ViewGroup contentView = (ViewGroup) SimpleDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
 
+        fullScreenContainer = (ViewGroup) getLayoutInflater()
+                .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
+
+        //初始化全屏控件
+        initUIByScreenType(false);
+
+        fullScreenBottomContainerRL = (RelativeLayout) fullScreenContainer.findViewById(R.id.full_screen_bottom_container_RL);
+
+        //退出全屏按钮
+        backToNormalBN = (Button) fullScreenContainer.findViewById(R.id.back_to_normal_BN);
+        backToNormalBN.setOnClickListener(getBackToNormalListener());
+
+        //锁屏
+        lockScreenBN = (Button) fullScreenContainer.findViewById(R.id.lock_screen_BN);
+        lockScreenBN.setOnClickListener(new LockScreenListener());
+
+        return fullScreenContainer;
     }
 
     @Override
     public void onQuitFullScreen() {
         //初始化普通屏控件
         initUIByScreenType(true);
+    }
+
+    @Override
+    public void onEnterTinyScreen() {
+        tinyScreenBN.setText("退出小屏");
+    }
+
+    @Override
+    public void onQuitTinyScreen() {
+        tinyScreenBN.setText("小屏");
     }
 
     @Override
@@ -374,34 +402,39 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
 
         @Override
         public void onClick(View v) {
-            startFullScreen();
+//            startFullScreen();
+
+            boolean hasActionBar = false;
+            if(getSupportActionBar() != null) hasActionBar = true;
+
+            xibaVP.startFullScreen(hasActionBar, true);
         }
     }
 
-    private void startFullScreen(){
-        ViewGroup contentView = (ViewGroup) SimpleDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
-
-        fullScreenContainer = (ViewGroup) getLayoutInflater()
-                .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
-
-        //初始化全屏控件
-        initUIByScreenType(false);
-
-        fullScreenBottomContainerRL = (RelativeLayout) fullScreenContainer.findViewById(R.id.full_screen_bottom_container_RL);
-
-        //退出全屏按钮
-        backToNormalBN = (Button) fullScreenContainer.findViewById(R.id.back_to_normal_BN);
-        backToNormalBN.setOnClickListener(getBackToNormalListener());
-
-        //锁屏
-        lockScreenBN = (Button) fullScreenContainer.findViewById(R.id.lock_screen_BN);
-        lockScreenBN.setOnClickListener(new LockScreenListener());
-
-        boolean hasActionBar = false;
-        if(getSupportActionBar() != null) hasActionBar = true;
-
-        xibaVP.startFullScreen(fullScreenContainer, hasActionBar, true);
-    }
+//    private void startFullScreen(){
+//        ViewGroup contentView = (ViewGroup) SimpleDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
+//
+//        fullScreenContainer = (ViewGroup) getLayoutInflater()
+//                .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
+//
+//        //初始化全屏控件
+//        initUIByScreenType(false);
+//
+//        fullScreenBottomContainerRL = (RelativeLayout) fullScreenContainer.findViewById(R.id.full_screen_bottom_container_RL);
+//
+//        //退出全屏按钮
+//        backToNormalBN = (Button) fullScreenContainer.findViewById(R.id.back_to_normal_BN);
+//        backToNormalBN.setOnClickListener(getBackToNormalListener());
+//
+//        //锁屏
+//        lockScreenBN = (Button) fullScreenContainer.findViewById(R.id.lock_screen_BN);
+//        lockScreenBN.setOnClickListener(new LockScreenListener());
+//
+//        boolean hasActionBar = false;
+//        if(getSupportActionBar() != null) hasActionBar = true;
+//
+//        xibaVP.startFullScreen(fullScreenContainer, hasActionBar, true);
+//    }
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --StartFullScreenListener end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
     /**
@@ -443,6 +476,9 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
         lockScreenBN.setVisibility(View.GONE);
     }
 
+    /**
+     * 显示或隐藏全屏UI控件
+     */
     private void toggleShowHideFullScreenUI(){
         if (fullScreenBottomContainerRL != null) {
             if (fullScreenBottomContainerRL.getVisibility() == View.VISIBLE) {

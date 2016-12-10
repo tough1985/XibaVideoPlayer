@@ -12,7 +12,10 @@
             android:layout_width="match_parent"
             android:layout_height="300dp"
             android:layout_gravity="center"
-            android:background="#99111111"/>
+            android:background="#99111111"
+            />
+
+
 
         <TextView
             android:id="@+id/position_changing_info_TV"
