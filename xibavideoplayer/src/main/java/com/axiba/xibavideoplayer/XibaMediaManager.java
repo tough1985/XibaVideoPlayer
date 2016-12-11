@@ -132,27 +132,32 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                     break;
                 //开始
                 case MESSAGE_START:
-                    mediaPlayer.start();
-                    mainThreadHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (listener != null) {
-                                getListener().onStart();
+                    if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+                        mediaPlayer.start();
+                        mainThreadHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (listener != null) {
+                                    getListener().onStart();
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                     break;
                 //暂停
                 case MESSAGE_PAUSE:
-                    mediaPlayer.pause();
-                    mainThreadHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (listener != null) {
-                                getListener().onPause();
+                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                        mediaPlayer.pause();
+                        mainThreadHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (listener != null) {
+                                    getListener().onPause();
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+
                     break;
             }
         }

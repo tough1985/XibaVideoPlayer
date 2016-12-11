@@ -1,5 +1,7 @@
 package com.axiba.xibavideoplayer.sample;
 
+import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -23,7 +25,7 @@ import com.axiba.xibavideoplayer.utils.XibaUtil;
 /**
  * Created by xiba on 2016/11/26.
  */
-public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPlayerEventCallback{
+public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEventCallback{
 
     public static final String TAG = SimpleDemoActivity.class.getSimpleName();
 
@@ -72,6 +74,7 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
 
         xibaVP.setUp(url, 0, new Object[]{});
         xibaVP.setEventCallback(this);
+        xibaVP.setAutoRotate(true);
 
         //初始化监听
         mStartButtonListener = new StartButtonListener();
@@ -159,8 +162,19 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
     }
 
     @Override
+    protected void onPause() {
+        xibaVP.pausePlayer();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        xibaVP.resumePlayer();
+        super.onResume();
+    }
+
+    @Override
     protected void onStop() {
-//        xibaVP.release();
         super.onStop();
     }
 
@@ -194,6 +208,10 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
             demoSeek.setProgress(progress);
         }
         demoSeek.setSecondaryProgress(secProgress);
+
+        if (!demoSeek.isEnabled()) {
+            demoSeek.setEnabled(true);
+        }
     }
 
     @Override
@@ -404,10 +422,8 @@ public class SimpleDemoActivity extends AppCompatActivity implements XibaVideoPl
         public void onClick(View v) {
 //            startFullScreen();
 
-            boolean hasActionBar = false;
-            if(getSupportActionBar() != null) hasActionBar = true;
-
-            xibaVP.startFullScreen(hasActionBar, true);
+            xibaVP.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            xibaVP.setAutoRotate(false);
         }
     }
 

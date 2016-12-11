@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.view.OrientationEventListener;
 
+import com.axiba.xibavideoplayer.XibaVideoPlayer;
+import com.axiba.xibavideoplayer.listener.OnAutoOrientationChangedListener;
+
 /**
  * 处理屏幕旋转的的逻辑
  */
@@ -26,8 +29,11 @@ public class OrientationUtils {
      */
     private int mCurrentScreenType;
 
-    public OrientationUtils(Activity activity) {
+    private OnAutoOrientationChangedListener mOnAutoOrientationChangedListener;
+
+    public OrientationUtils(Activity activity, OnAutoOrientationChangedListener onAutoOrientationChangedListener) {
         this.activity = activity;
+        this.mOnAutoOrientationChangedListener = onAutoOrientationChangedListener;
         init();
     }
 
@@ -46,7 +52,8 @@ public class OrientationUtils {
 
                     //只有在自动旋转状态处理逻辑
                     if (isAutoRotate) {
-                        setOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//                        setOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                        mOnAutoOrientationChangedListener.onPortrait();
                     }
 
                 } else if (orientation > 240 && orientation < 310) {                //横屏
@@ -58,7 +65,8 @@ public class OrientationUtils {
                     //当前是自动模式 或者 手动模式但是屏幕是反向横屏模式
                     if (isAutoRotate ||
                             (!isAutoRotate && mCurrentScreenType == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE)) {
-                        setOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+//                        setOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                        mOnAutoOrientationChangedListener.onLandscape();
                     }
 
                 } else if (orientation > 50 && orientation < 130) {                 //反向横屏
@@ -71,7 +79,8 @@ public class OrientationUtils {
                     if (isAutoRotate ||
                             (!isAutoRotate && mCurrentScreenType == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)) {
 
-                        setOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+//                        setOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+                        mOnAutoOrientationChangedListener.onReverseLandscape();
                     }
                 }
             }
@@ -119,7 +128,7 @@ public class OrientationUtils {
      * 设置屏幕方向
      * @param orientation 请使用ActivityInfo的相关常量作为参数
      */
-    private void setOrientation(int orientation){
+    public void setOrientation(int orientation){
         mCurrentScreenType = orientation;
         activity.setRequestedOrientation(orientation);
     }

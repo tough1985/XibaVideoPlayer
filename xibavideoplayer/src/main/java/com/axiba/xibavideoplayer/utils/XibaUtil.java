@@ -8,10 +8,7 @@ import android.net.NetworkInfo;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ContextThemeWrapper;
-import android.util.Log;
 import android.view.WindowManager;
-
-import com.axiba.xibavideoplayer.BuildConfig;
 
 import java.util.Formatter;
 import java.util.Locale;
@@ -23,10 +20,11 @@ public class XibaUtil {
 
     /**
      * 将毫秒数转化为字符串格式的时长
+     *
      * @param timeMs
      * @return
      */
-    public static String stringForTime(long timeMs){
+    public static String stringForTime(long timeMs) {
         if (timeMs <= 0 || timeMs >= 24 * 60 * 60 * 1000) {
             return "00:00";
         }
@@ -48,6 +46,7 @@ public class XibaUtil {
 
     /**
      * wifi是否连接
+     *
      * @param context
      * @return true 已连接; false wifi未连接
      */
@@ -91,31 +90,45 @@ public class XibaUtil {
         return null;
     }
 
-    public static void hideSupportActionBar(Context context, boolean actionBar, boolean statusBar) {
-        if (actionBar) {
-            ActionBar ab = XibaUtil.getAppCompActivity(context).getSupportActionBar();
+    public static void hideSupportActionBar(Context context) {
+
+        if (context == null) return;
+
+        if (context instanceof AppCompatActivity) {
+            ActionBar ab = ((AppCompatActivity) context).getSupportActionBar();
             if (ab != null) {
                 ab.setShowHideAnimationEnabled(false);
                 ab.hide();
             }
+        } else if(context instanceof Activity){
+            android.app.ActionBar ab = ((Activity) context).getActionBar();
+            if (ab != null) {
+                ab.hide();
+            }
         }
-        if (statusBar) {
-            XibaUtil.getAppCompActivity(context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
+
+        XibaUtil.scanForActivity(context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
-    public static void showSupportActionBar(Context context, boolean actionBar, boolean statusBar) {
-        if (actionBar) {
-            ActionBar ab = XibaUtil.getAppCompActivity(context).getSupportActionBar();
+    public static void showSupportActionBar(Context context) {
+
+        if (context == null) return;
+
+        if (context instanceof AppCompatActivity) {
+            ActionBar ab = ((AppCompatActivity) context).getSupportActionBar();
             if (ab != null) {
                 ab.setShowHideAnimationEnabled(false);
                 ab.show();
             }
+        } else if(context instanceof Activity){
+            android.app.ActionBar ab = ((Activity) context).getActionBar();
+            if (ab != null) {
+                ab.show();
+            }
         }
-        if (statusBar) {
-            XibaUtil.getAppCompActivity(context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
+
+        XibaUtil.scanForActivity(context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
 }
