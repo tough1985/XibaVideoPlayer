@@ -231,6 +231,47 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         this.url = url;
         this.mCurrentScreen = screen;
         this.objects = objects;
+        this.mCurrentPosition = 0;
+
+        this.mCacheBitmap = null;
+        if (cacheImageView != null) {
+            cacheImageView.setImageBitmap(mCacheBitmap);
+            cacheImageView.setVisibility(INVISIBLE);
+        }
+
+
+        return true;
+    }
+
+    /**
+     * 设置视频源
+     *
+     * @param url
+     * @param screen
+     * @param position
+     * @return
+     */
+    public boolean setUp(String url, int screen, long position, Bitmap cacheBitmap) {
+        if (TextUtils.isEmpty(url) && TextUtils.equals(this.url, url)) {
+            return false;
+        }
+
+        mCurrentState = STATE_NORMAL;
+
+        this.url = url;
+        this.mCurrentScreen = screen;
+        this.mCurrentPosition = position;
+
+        if (cacheBitmap != null) {
+            this.mCacheBitmap = cacheBitmap;
+            cacheImageView.setImageBitmap(mCacheBitmap);
+            cacheImageView.setVisibility(VISIBLE);
+        } else {
+            this.mCacheBitmap = null;
+            cacheImageView.setImageBitmap(mCacheBitmap);
+            cacheImageView.setVisibility(INVISIBLE);
+        }
+
         return true;
     }
 
@@ -322,8 +363,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         AudioManager mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         mAudioManager.requestAudioFocus(onAudioFocusChangeListener,
                 AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-        //屏幕常亮
-        ((Activity) getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//        //屏幕常亮
+//        ((Activity) getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 //        //准备播放视频
         XibaMediaManager.getInstance().prepare(url, mapHeadData, mLooping);
@@ -375,26 +416,26 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         return true;
     }
 
-    /**
-     * 指定位置开始播放
-     * @param progress
-     */
-    public void seekTo(int progress){
-        if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
-            long seekTime = progress * getDuration() / 100;
-
-            if (XibaMediaManager.getInstance().getMediaPlayer().isPlaying()) {
-                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
-            } else if(mCurrentState == STATE_PAUSE || mCurrentState == STATE_COMPLETE) {
-                if (eventCallback != null) {
-                    eventCallback.onPlayerResume();    //回调继续播放方法
-                }
-                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
-                XibaMediaManager.getInstance().getMediaPlayer().start();
-                setUiWithStateAndScreen(STATE_PLAYING);
-            }
-        }
-    }
+//    /**
+//     * 指定位置开始播放
+//     * @param progress
+//     */
+//    public void seekTo(int progress){
+//        if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
+//            long seekTime = progress * getDuration() / 100;
+//
+//            if (XibaMediaManager.getInstance().getMediaPlayer().isPlaying()) {
+//                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
+//            } else if(mCurrentState == STATE_PAUSE || mCurrentState == STATE_COMPLETE) {
+//                if (eventCallback != null) {
+//                    eventCallback.onPlayerResume();    //回调继续播放方法
+//                }
+//                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
+//                XibaMediaManager.getInstance().getMediaPlayer().start();
+//                setUiWithStateAndScreen(STATE_PLAYING);
+//            }
+//        }
+//    }
 
     public void seekTo(long position){
         if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
@@ -416,9 +457,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         mCurrentState = state;
         switch (mCurrentState) {
 
-            case STATE_COMPLETE:
-                cancelProgressTimer();
-                break;
+//            case STATE_COMPLETE:
+//                cancelProgressTimer();
+//                //屏幕常亮
+//                ((Activity) getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//                break;
             case STATE_NORMAL:
             case STATE_ERROR:
                 release();
@@ -427,12 +470,18 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //                resetProgressAndTime();
                 break;
             case STATE_PLAYING:
-            case STATE_PAUSE:
+//            case STATE_PAUSE:
             case STATE_PLAYING_BUFFERING_START:
                 startProgressTimer();
+                //屏幕常亮
+                ((Activity) getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 break;
+            case STATE_PAUSE:
+            case STATE_COMPLETE:
             case STATE_AUTO_COMPLETE:
                 cancelProgressTimer();
+                //取消屏幕常亮
+                ((Activity) getContext()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 break;
         }
     }
@@ -457,6 +506,12 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 暂停
      */
     public void pausePlayer(){
+        if (mCurrentState == STATE_PLAYING || mCurrentState == STATE_PLAYING_BUFFERING_START || mCurrentState == STATE_PREPARING) {
+            mCurrentState = STATE_PAUSE;
+        }
+        if (mCurrentScreen == SCREEN_LIST) {
+            getCacheImageBitmap();
+        }
         XibaMediaManager.getInstance().pausePlayer();
         mCurrentPosition = XibaMediaManager.getInstance().getMediaPlayer().getCurrentPosition();
     }
@@ -526,8 +581,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                         } else if (mSeekTimePosition < 0) {
                             mSeekTimePosition = 0;
                         }
+                        if (eventCallback != null) {
+                            eventCallback.onChangingPosition(mDownPosition, mSeekTimePosition, totalTimeDuration); //回调播放位置变化
+                        }
 
-                        eventCallback.onChangingPosition(mDownPosition, mSeekTimePosition, totalTimeDuration); //回调播放位置变化
                         break;
 
                     //改变音量
@@ -547,8 +604,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                         mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, changedVolume, 0); //设置音量
 
                         int volumePercent = changedVolume * 100 / max;  //当前音量的百分比
-
-                        eventCallback.onChangingVolume(volumePercent);  //回调音量改变方法
+                        if (eventCallback != null) {
+                            eventCallback.onChangingVolume(volumePercent);  //回调音量改变方法
+                        }
                         break;
 
                     //改变亮度
@@ -567,7 +625,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                         ((Activity)getContext()).getWindow().setAttributes(wLayoutParams);  //设置亮度，退出后亮度会自动恢复到系统亮度
 
                         int brightneesPercent = (int) (changedBrightness * 100);    //当前亮度百分比
-                        eventCallback.onChangingBrightness(brightneesPercent);      //回调亮度改变方法
+
+                        if (eventCallback != null) {
+                            eventCallback.onChangingBrightness(brightneesPercent);      //回调亮度改变方法
+                        }
 
                         break;
 
@@ -611,21 +672,29 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             case MotionEvent.ACTION_UP:
                 //如果是在锁屏状态，调用锁屏触摸回调
                 if (mIsScreenLocked) {
-                    eventCallback.onTouchLockedScreen();
+                    if (eventCallback != null) {
+                        eventCallback.onTouchLockedScreen();
+                    }
                     return true;
                 }
 
                 switch (mTouchCurrentFeature) {
                     case CHANGING_POSITION:
                         XibaMediaManager.getInstance().getMediaPlayer().seekTo(mSeekTimePosition);
-                        eventCallback.onChangingPositionEnd();  //播放位置改变结束回调
+                        if (eventCallback != null) {
+                            eventCallback.onChangingPositionEnd();  //播放位置改变结束回调
+                        }
                         startProgressTimer();
                         break;
                     case CHANGING_VOLUME:
-                        eventCallback.onChangingVolumeEnd();    //音量变化结束回调
+                        if (eventCallback != null) {
+                            eventCallback.onChangingVolumeEnd();    //音量变化结束回调
+                        }
                         break;
                     case CHANGING_BRIGHTNESS:
-                        eventCallback.onChangingBrightnessEnd();    //亮度变化结束回调
+                        if (eventCallback != null) {
+                            eventCallback.onChangingBrightnessEnd();    //亮度变化结束回调
+                        }
                         break;
                 }
                 break;
@@ -652,7 +721,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                 return false;
             }
             Log.e(TAG, "onSingleTapConfirmed");
-            eventCallback.onSingleTap();    //单击事件回调
+            if (eventCallback != null) {
+                eventCallback.onSingleTap();    //单击事件回调
+            }
             return true;
         }
 
@@ -663,7 +734,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             }
 
             if (e.getAction() == MotionEvent.ACTION_UP) {
-                eventCallback.onDoubleTap();    //双击事件回调
+                if (eventCallback != null) {
+                    eventCallback.onDoubleTap();    //双击事件回调
+                }
                 return true;
             }
 
@@ -818,8 +891,15 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //        mHasActionBar = hasActionBar;
 //        mHasStatusBar = hasStatusBar;
 
+        ViewGroup fullScreenContainer = null;
         //进入全屏事件回调
-        ViewGroup fullScreenContainer = eventCallback.onEnterFullScreen();
+        if (eventCallback != null) {
+            fullScreenContainer = eventCallback.onEnterFullScreen();
+        }
+
+        if (fullScreenContainer == null) {
+            throw new RuntimeException("eventCallback.onEnterFullScreen must return a ViewGroup for player");
+        }
 
         mParent = ((ViewGroup)this.getParent());    //获取当前父容器
         mIndexInParent = mParent.indexOfChild(this);    //获取在父容器中的索引
@@ -904,7 +984,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         mOrientationUtils.setOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        eventCallback.onQuitFullScreen();   //调用退出全屏回调事件
+        if (eventCallback != null) {
+            eventCallback.onQuitFullScreen();   //调用退出全屏回调事件
+        }
 
         //改变texture尺寸
         if (textureView != null) {
@@ -1095,7 +1177,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             this.setOnTouchListener(new TinyWindowOnTouchListener());
         }
 
-        eventCallback.onEnterTinyScreen();  //调用进入小屏回调事件
+        if (eventCallback != null) {
+            eventCallback.onEnterTinyScreen();  //调用进入小屏回调事件
+        }
 
         showCacheImageView();   //显示视频截图
     }
@@ -1137,7 +1221,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         mCurrentScreen = SCREEN_NORMAL;     //设置屏幕尺寸
 
-        eventCallback.onQuitTinyScreen();   //调用退出小屏回调事件
+        if (eventCallback != null) {
+            eventCallback.onQuitTinyScreen();   //调用退出小屏回调事件
+        }
 
         showCacheImageView();   //显示视频截图
     }
@@ -1150,11 +1236,13 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     /**
      * 获取切换屏幕时的视频截图
      */
-    private void getCacheImageBitmap(){
+    private Bitmap getCacheImageBitmap(){
         if (textureView != null && mHasTextureUpdated) {
             mCacheBitmap = textureView.getBitmap();
             mHasTextureUpdated = false;
+            return mCacheBitmap;
         }
+        return null;
     }
 
     /**
@@ -1170,6 +1258,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             cacheImageView.setVideoSize(XibaMediaManager.getInstance().getVideoSize());
             cacheImageView.setVisibility(VISIBLE);
         }
+    }
+
+    public Bitmap getCacheBitmap(){
+        return mCacheBitmap;
     }
 
     /**
@@ -1301,12 +1393,15 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onPause() {
+
+        setUiWithStateAndScreen(STATE_PAUSE);
+
+        getCacheImageBitmap();  //获取视频截图
+        showCacheImageView();
+
         if (eventCallback != null) {
             eventCallback.onPlayerPause();    //回调暂停方法
         }
-        setUiWithStateAndScreen(STATE_PAUSE);
-        getCacheImageBitmap();  //获取视频截图
-        showCacheImageView();
     }
 
     @Override
@@ -1429,8 +1524,12 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             progressTimerTask.cancel();
         }
 
-        //取消屏幕常亮
-        ((Activity) getContext()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if (mTimerRunnable != null) {
+            mHandler.removeCallbacks(mTimerRunnable);
+        }
+
+//        //取消屏幕常亮
+//        ((Activity) getContext()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     /**
@@ -1441,20 +1540,45 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         @Override
         public void run() {
             if (mCurrentState == STATE_PLAYING
-                    || mCurrentState == STATE_PAUSE
+//                    || mCurrentState == STATE_PAUSE
                     || mCurrentState == STATE_PLAYING_BUFFERING_START) {
 
                 final long position = getCurrentPositionWhenPlaying();                   //当前播放位置
                 final long duration = getDuration();                                     //总时长
                 final int progress = (int) (position * 100 / (duration == 0 ? 1 : duration));   //播放进度
 
+                mTimerRunnable.setProgressInfo(progress, position, duration);
                 //由于Timer会另开一条线程工作，因此不能操作UI，所以使用Handler让回调方法在主线程工作
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        eventCallback.onPlayerProgressUpdate(progress, mCurrentBufferPercentage, position, duration);
-                    }
-                });
+//                mHandler.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if (eventCallback != null) {
+//                            eventCallback.onPlayerProgressUpdate(progress, mCurrentBufferPercentage, position, duration);
+//                        }
+//                    }
+//                });
+
+                mHandler.post(mTimerRunnable);
+            }
+        }
+    }
+
+    private TimerRunnable mTimerRunnable = new TimerRunnable();
+
+    private class TimerRunnable implements Runnable{
+
+        private int progress;
+        private long position;
+        private long duration;
+        public void setProgressInfo(int progress, long position, long duration){
+            this.progress = progress;
+            this.position = position;
+            this.duration = duration;
+        }
+        @Override
+        public void run() {
+            if (eventCallback != null) {
+                eventCallback.onPlayerProgressUpdate(progress, mCurrentBufferPercentage, position, duration);
             }
         }
     }
@@ -1463,7 +1587,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 获取当前播放位置
      * @return
      */
-    private long getCurrentPositionWhenPlaying() {
+    public long getCurrentPositionWhenPlaying() {
         long position = 0;
         if (mCurrentState == STATE_PLAYING || mCurrentState == STATE_PAUSE) {
             try {
@@ -1479,11 +1603,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 获取视频时长
      * @return
      */
-    private long getDuration(){
+    public long getDuration(){
         long duration = 0;
 
         try {
-            duration = (int) XibaMediaManager.getInstance().getMediaPlayer().getDuration();
+            duration = XibaMediaManager.getInstance().getMediaPlayer().getDuration();
         } catch (IllegalStateException e) {
             e.printStackTrace();
             return duration;

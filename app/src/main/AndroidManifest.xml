@@ -30,6 +30,9 @@
 
         <activity android:name=".OrientationEventActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity android:name=".ListDemoActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
     </application>
 
 </manifest>

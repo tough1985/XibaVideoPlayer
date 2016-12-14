@@ -1,5 +1,6 @@
 package com.axiba.xibavideoplayer;
 
+import android.graphics.Bitmap;
 import android.view.ViewGroup;
 
 /**
@@ -109,5 +110,6 @@ public interface XibaVideoPlayerEventCallback {
      * 点击被锁住的屏幕
      */
     void onTouchLockedScreen();
+
 
 }

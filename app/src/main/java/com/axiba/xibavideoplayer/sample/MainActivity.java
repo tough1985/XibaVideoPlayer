@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button ijkDemoBN;
     private Button xibaSimpleDemoBN;
     private Button orientationBN;
+    private Button listBN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +35,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ijkDemoBN = (Button) findViewById(R.id.ijk_demo_BN);
         xibaSimpleDemoBN = (Button) findViewById(R.id.xiba_sample_demo_BN);
         orientationBN = (Button) findViewById(R.id.orientation_demo_BN);
+        listBN = (Button) findViewById(R.id.list_demo_BN);
 
         ijkDemoBN.setOnClickListener(this);
         xibaSimpleDemoBN.setOnClickListener(this);
         orientationBN.setOnClickListener(this);
+        listBN.setOnClickListener(this);
     }
 
 
@@ -54,6 +57,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.orientation_demo_BN:
                 target = OrientationEventActivity.class;
+                break;
+            case R.id.list_demo_BN:
+                target = ListDemoActivity.class;
                 break;
         }
         startActivity(new Intent(this, target));

@@ -28,4 +28,10 @@
         android:layout_height="wrap_content"
         android:text="Orientation Event Demo"/>
 
+    <Button
+        android:id="@+id/list_demo_BN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="List Demo"/>
+
 </LinearLayout>

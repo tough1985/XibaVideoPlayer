@@ -15,8 +15,6 @@
             android:background="#99111111"
             />
 
-
-
         <TextView
             android:id="@+id/position_changing_info_TV"
             android:layout_width="wrap_content"
