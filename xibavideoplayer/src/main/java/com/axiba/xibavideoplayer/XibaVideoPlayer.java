@@ -87,7 +87,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     public static final int SCREEN_LIST = 3;                //列表
 
     private int mCurrentScreen = -1;                         //当前屏幕状态
-
+    private int mSetUpScreen = -1;                          //初始时的屏幕状态
 
     protected String url;                                   //播放地址
 
@@ -145,7 +145,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     private ViewGroup mParent;      //播放器父容器
     private int mIndexInParent = 0;  //在父容器中的索引
     private ViewGroup.LayoutParams mLayoutParams;   //播放器布局参数
-    private int mBackgroundColor = Color.WHITE; //播放器背景色
+    private int mBackgroundColor = Color.TRANSPARENT; //播放器背景色
 
     private float mOriginX;      //播放器x坐标
     private float mOriginY;      //播放器y坐标
@@ -233,6 +233,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         this.objects = objects;
         this.mCurrentPosition = 0;
 
+        this.mSetUpScreen = screen;
+
         this.mCacheBitmap = null;
         if (cacheImageView != null) {
             cacheImageView.setImageBitmap(mCacheBitmap);
@@ -261,6 +263,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         this.url = url;
         this.mCurrentScreen = screen;
         this.mCurrentPosition = position;
+
+        this.mSetUpScreen = screen;
 
         if (cacheBitmap != null) {
             this.mCacheBitmap = cacheBitmap;
@@ -998,7 +1002,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         showCacheImageView();   //显示视频截图
 
         //设置屏幕状态
-        mCurrentScreen = SCREEN_NORMAL;
+//        mCurrentScreen = SCREEN_NORMAL;
+        mCurrentScreen = mSetUpScreen;
     }
 
 //    /**
@@ -1219,7 +1224,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             this.addTexture();
         }
 
-        mCurrentScreen = SCREEN_NORMAL;     //设置屏幕尺寸
+//        mCurrentScreen = SCREEN_NORMAL;     //设置屏幕类型
+        mCurrentScreen = mSetUpScreen;
 
         if (eventCallback != null) {
             eventCallback.onQuitTinyScreen();   //调用退出小屏回调事件

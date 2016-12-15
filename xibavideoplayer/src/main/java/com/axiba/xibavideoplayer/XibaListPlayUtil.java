@@ -2,6 +2,7 @@ package com.axiba.xibavideoplayer;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.media.Image;
 import android.util.Log;
@@ -46,6 +47,72 @@ public class XibaListPlayUtil {
     }
 
     /**
+     * 全屏播放
+     * @param url
+     * @param position
+     * @param itemContainer
+     * @param eventCallback
+     */
+    public void startFullScreen(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback){
+        if (mPlayingPosition != position) {
+            togglePlay(url, position, itemContainer, eventCallback);
+            mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            mXibaVideoPlayer.setAutoRotate(false);
+        } else {
+            mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            mXibaVideoPlayer.setAutoRotate(false);
+        }
+    }
+
+    /**
+     * 退出全屏
+     */
+    public void quitFullScreen(){
+
+        mXibaVideoPlayer.quitFullScreen();
+        savePlayerInfo();
+    }
+
+    /**
+     * 暂停或播放
+     */
+    public void togglePlay(){
+        mXibaVideoPlayer.togglePlayPause();
+    }
+
+    /**
+     * 获取屏幕类型
+     * @return
+     */
+    public int getCurrentScreen(){
+        return mXibaVideoPlayer.getCurrentScreen();
+    }
+
+    /**
+     * 获取锁屏状态
+     * @return
+     */
+    public boolean isScreenLock(){
+        return mXibaVideoPlayer.isScreenLock();
+    }
+
+    /**
+     * 设置锁屏状态
+     * @param lock
+     */
+    public void lockScreen(boolean lock){
+        mXibaVideoPlayer.setScreenLock(lock);
+    }
+
+    public boolean onBackPress(){
+        if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+            quitFullScreen();
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 1.开始播放
      * 2.暂停
      * 3.恢复播放 播放位置
@@ -71,7 +138,7 @@ public class XibaListPlayUtil {
              * 先保存，删除，然后setUp播放器，最后再添加到itemContainer
              */
 //            removeFromList(lastState);
-            removeplayerFromParent(lastState);
+            removePlayerFromParent(lastState);
 
             //设置播放索引为当前索引
             mPlayingPosition = position;
@@ -138,6 +205,10 @@ public class XibaListPlayUtil {
      */
     public void addToListItem(ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
 
+        if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+            return;
+        }
+        
         removeCacheImageView(itemContainer);    //移出itemContainer中的暂停图片
 
         ViewGroup parent = (ViewGroup) mXibaVideoPlayer.getParent();
@@ -168,6 +239,10 @@ public class XibaListPlayUtil {
      */
     private void removePlayerFromParent(){
 
+        if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+            return;
+        }
+
         //保存移出时候的状态
         savePlayerInfo();
         mXibaVideoPlayer.setEventCallback(null);
@@ -187,7 +262,11 @@ public class XibaListPlayUtil {
      * 将播放器从父容器中移出
      * @param lastState 根据状态判断是否需要添加暂停图片
      */
-    private void removeplayerFromParent(int lastState){
+    private void removePlayerFromParent(int lastState){
+
+        if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+            return;
+        }
 
         //保存移出时候的状态
         PlayerStateInfo playerStateInfo = savePlayerInfo();
@@ -215,6 +294,10 @@ public class XibaListPlayUtil {
      * 将播放器添加到ContentView中
      */
     private void addToContentView(){
+        if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+            return;
+        }
+
         ViewGroup contentView = (ViewGroup) ((Activity)context).getWindow().findViewById(Window.ID_ANDROID_CONTENT);
 
         //如果ContentView中已经有播放器，直接返回
@@ -304,6 +387,8 @@ public class XibaListPlayUtil {
             itemContainer.removeView(cache);
         }
     }
+
+
 
     /**
      * 释放资源
