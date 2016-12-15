@@ -1,5 +1,6 @@
 package com.axiba.xibavideoplayer;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
@@ -7,6 +8,7 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
 
 /**
@@ -17,6 +19,10 @@ public class XibaListPlayUtil {
 
     public static final String TAG = XibaListPlayUtil.class.getSimpleName();
 
+    public static final String PLAYER_TAG_NO_CONTAINER = "";                 //没有父容器
+    public static final String PLAYER_TAG_ITEM_CONTAINER = "itemContainer";  //父容器是itemContainer
+    public static final String PLAYER_TAG_CONTENT_VIEW = "contentView";      //父容器是ContentView
+
     private XibaVideoPlayer mXibaVideoPlayer;
 
     private int mPlayingPosition = -1;  //当前正在播放的item索引
@@ -24,6 +30,9 @@ public class XibaListPlayUtil {
     private SparseArray<PlayerStateInfo> stateInfoList;
 
     private Context context;
+
+    private int mXibaVideoPlayerWidth;
+    private int mXibaVideoPlayerHeight;
 
 
     public XibaListPlayUtil(Context context) {
@@ -52,19 +61,18 @@ public class XibaListPlayUtil {
 
             int lastState = mXibaVideoPlayer.getCurrentState();
 
+            //如果播放器为播放状态，暂停播放器
             if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
                     || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
                 mXibaVideoPlayer.pausePlayer();
             }
             
             /**
-             * 先删除，保存，然后setUp播放器，最后再添加到itemContainer
+             * 先保存，删除，然后setUp播放器，最后再添加到itemContainer
              */
-            removeFromList(eventCallback, lastState);
+//            removeFromList(lastState);
+            removeplayerFromParent(lastState);
 
-
-            Log.e(TAG, "togglePlay: mPlayingPosition=" + mPlayingPosition);
-            Log.e(TAG, "togglePlay: position=" + position);
             //设置播放索引为当前索引
             mPlayingPosition = position;
 
@@ -76,57 +84,45 @@ public class XibaListPlayUtil {
                 mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
             }
 
-            removeCacheImageView(itemContainer);    //清除缓存图片
-
-            ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT);
-
-            mXibaVideoPlayer.setEventCallback(eventCallback);
-            itemContainer.addView(mXibaVideoPlayer, 0, layoutParams);   //添加播放器到目标Item
-
-
-        } else {
-            removeCacheImageView(itemContainer);    //清除缓存图片
+            addToListItem(itemContainer, eventCallback);    //添加到ItemContainer
         }
 
         mXibaVideoPlayer.togglePlayPause();
 
     }
 
+    /**
+     * 根据position和播放器的状态，来确定itemContainer中的内容
+     * @param position
+     * @param itemContainer
+     * @param eventCallback
+     * @return
+     */
     public PlayerStateInfo resolveItem(int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
 
         if (itemContainer != null) {
 
             PlayerStateInfo stateInfo = stateInfoList.get(position);
 
-            if (stateInfo != null && stateInfo.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
-
+            if (stateInfo != null && stateInfo.getCurrentState() == XibaVideoPlayer.STATE_PAUSE && mPlayingPosition != position) {
+                //如果当期item为暂停状态，添加暂停图片
                 addCacheImageView(itemContainer, stateInfo.getCacheBitmap());
-
-//                if (stateInfo.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
-//                    //显示缓存图片
-//                    addCacheImageView(itemContainer, stateInfo.getCacheBitmap());
-//                } else {
-//                    //如果有缓存图片，删除缓存图片
-//                    removeCacheImageView(itemContainer);
-//                }
-
             } else {
                 //如果有缓存图片就删除
                 removeCacheImageView(itemContainer);
             }
 
-
-
-            if (mPlayingPosition == position) { //当前播放的item
+            if (mPlayingPosition == position) {
+                //如果item为正在播放的item，将播放器添加到item中
                 if (itemContainer.indexOfChild(mXibaVideoPlayer) == -1) {
                     addToListItem(itemContainer, eventCallback);
                 }
             } else {
-                //如果播放器被复用，但又不是当前播放的索引，将播放器从容器中移出
+                //如果播放器被复用，但又不是当前播放的索引，将播放器从容器中移出，并添加到contentView中
                 if (itemContainer.indexOfChild(mXibaVideoPlayer) != -1) {
-                    removeFromList(eventCallback, -1);
+//                    removeFromList(-1);
+                    removePlayerFromParent();
+                    addToContentView();
                 }
             }
         }
@@ -142,6 +138,8 @@ public class XibaListPlayUtil {
      */
     public void addToListItem(ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
 
+        removeCacheImageView(itemContainer);    //移出itemContainer中的暂停图片
+
         ViewGroup parent = (ViewGroup) mXibaVideoPlayer.getParent();
 
         //如果播放器已经在目标容器中，直接返回
@@ -149,8 +147,7 @@ public class XibaListPlayUtil {
             if (parent == itemContainer) {
                 return;
             } else {
-//                parent.removeView(mXibaVideoPlayer);
-                removeFromList(eventCallback, -1);
+                removePlayerFromParent();
             }
         }
 
@@ -160,23 +157,89 @@ public class XibaListPlayUtil {
 
         itemContainer.addView(mXibaVideoPlayer, 0, layoutParams);
 
+        mXibaVideoPlayer.setY(0);
+        mXibaVideoPlayer.setTag(PLAYER_TAG_ITEM_CONTAINER);
         mXibaVideoPlayer.setEventCallback(eventCallback);
+
     }
 
     /**
-     * 将播放器从Item中移出
+     * 将播放器从父容器中移出
      */
-    public void removeFromList(XibaVideoPlayerEventCallback eventCallback, int lastState) {
+    private void removePlayerFromParent(){
 
         //保存移出时候的状态
+        savePlayerInfo();
+        mXibaVideoPlayer.setEventCallback(null);
+        ViewGroup parent = (ViewGroup) mXibaVideoPlayer.getParent();
+
+        if (parent != null) {
+
+            mXibaVideoPlayerWidth = mXibaVideoPlayer.getWidth();    //获取播放器宽
+            mXibaVideoPlayerHeight = mXibaVideoPlayer.getHeight();  //获取播放器高
+
+            parent.removeView(mXibaVideoPlayer);
+            mXibaVideoPlayer.setTag(PLAYER_TAG_NO_CONTAINER);
+        }
+    }
+
+    /**
+     * 将播放器从父容器中移出
+     * @param lastState 根据状态判断是否需要添加暂停图片
+     */
+    private void removeplayerFromParent(int lastState){
+
+        //保存移出时候的状态
+        PlayerStateInfo playerStateInfo = savePlayerInfo();
+
+        mXibaVideoPlayer.setEventCallback(null);
+
+        ViewGroup parent = (ViewGroup) mXibaVideoPlayer.getParent();
+
+        if (parent != null) {
+
+            if ((lastState == XibaVideoPlayer.STATE_PLAYING || lastState == XibaVideoPlayer.STATE_PAUSE)
+                    && mXibaVideoPlayer.getTag().equals(PLAYER_TAG_ITEM_CONTAINER)) {
+                addCacheImageView(parent, playerStateInfo.getCacheBitmap());    //添加暂停图片
+            }
+
+            mXibaVideoPlayerWidth = mXibaVideoPlayer.getWidth();    //获取播放器宽
+            mXibaVideoPlayerHeight = mXibaVideoPlayer.getHeight();  //获取播放器高
+
+            parent.removeView(mXibaVideoPlayer);
+            mXibaVideoPlayer.setTag(PLAYER_TAG_NO_CONTAINER);
+        }
+    }
+
+    /**
+     * 将播放器添加到ContentView中
+     */
+    private void addToContentView(){
+        ViewGroup contentView = (ViewGroup) ((Activity)context).getWindow().findViewById(Window.ID_ANDROID_CONTENT);
+
+        //如果ContentView中已经有播放器，直接返回
+        if (contentView.indexOfChild(mXibaVideoPlayer) != -1) {
+            return;
+        }
+
+        mXibaVideoPlayer.setTag(PLAYER_TAG_CONTENT_VIEW);
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(mXibaVideoPlayerWidth, mXibaVideoPlayerHeight);
+        contentView.addView(mXibaVideoPlayer, 0, params);
+
+        //让播放器在屏幕上方不可见，这样暂停的时候，依然可以拿到暂停图片
+        mXibaVideoPlayer.setY(-mXibaVideoPlayerHeight);
+    }
+
+
+    /**
+     * 保存当前正在播放的播放器状态
+     */
+    private PlayerStateInfo savePlayerInfo(){
         PlayerStateInfo playerStateInfo = stateInfoList.get(mPlayingPosition);
 
         if (playerStateInfo == null) {
             playerStateInfo = new PlayerStateInfo();
         }
-
-        Log.e(TAG, "mXibaVideoPlayer.getCurrentState()=" + mXibaVideoPlayer.getCurrentState());
-        Log.e(TAG, "mXibaVideoPlayer.getCacheBitmap()=null?" + (mXibaVideoPlayer.getCacheBitmap() == null));
 
         playerStateInfo.setCurrentState(mXibaVideoPlayer.getCurrentState());
         playerStateInfo.setCacheBitmap(mXibaVideoPlayer.getCacheBitmap());
@@ -184,22 +247,7 @@ public class XibaListPlayUtil {
         playerStateInfo.setPosition(mXibaVideoPlayer.getCurrentPositionWhenPlaying());
 
         stateInfoList.put(mPlayingPosition, playerStateInfo);
-
-//        eventCallback.onCacheBitmap(playerStateInfo.getCacheBitmap());
-
-        mXibaVideoPlayer.setEventCallback(null);
-
-        ViewGroup parent = (ViewGroup) mXibaVideoPlayer.getParent();
-
-
-        if (parent != null) {
-
-            if (lastState == XibaVideoPlayer.STATE_PLAYING) {
-                addCacheImageView(parent, playerStateInfo.getCacheBitmap());
-            }
-
-            parent.removeView(mXibaVideoPlayer);
-        }
+        return playerStateInfo;
     }
 
     /**
@@ -213,34 +261,31 @@ public class XibaListPlayUtil {
             return;
         }
 
-//        if (itemContainer.getChildAt(0) instanceof ImageView) {
-//            return;
-//        }
-
         ImageView cacheIV = null;
-        for (int i = 0; i < itemContainer.getChildCount(); i++) {
-            if (itemContainer.getChildAt(i) instanceof ImageView) {
-                cacheIV = (ImageView) itemContainer.getChildAt(i);
-                break;
-            }
+
+        //当前itemContainer是否存在cache控件
+        View cache = itemContainer.findViewWithTag("cache");
+
+        //如果itemContainer中存在cache，直接使用
+        if (cache != null) {
+            cacheIV = (ImageView) cache;
         }
 
+        //如果当前itemContainer不存在cache，创建一个添加到itemContainer中
         if (cacheIV == null) {
             cacheIV = new ImageView(context);
             ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT);
 
+            cacheIV.setTag("cache");
+
             itemContainer.addView(cacheIV, 0, layoutParams);
         }
 
+        //为cache设置图片
         cacheIV.setImageBitmap(cacheBitmap);
 
-//        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-//                ViewGroup.LayoutParams.MATCH_PARENT,
-//                ViewGroup.LayoutParams.MATCH_PARENT);
-//
-//        itemContainer.addView(cacheIV, 0, layoutParams);
     }
 
     /**
@@ -252,18 +297,17 @@ public class XibaListPlayUtil {
             return;
         }
 
-        for (int i = 0; i < itemContainer.getChildCount(); i++) {
-            if (itemContainer.getChildAt(i) instanceof ImageView) {
-                itemContainer.removeViewAt(i);
-//                return;
-            }
+        //如果当前itemContainer存在cache，将cache移出
+        View cache = itemContainer.findViewWithTag("cache");
+        if (cache != null) {
+            cache.setTag("");
+            itemContainer.removeView(cache);
         }
-//        if (itemContainer.getChildAt(0) instanceof ImageView) {
-//            itemContainer.removeViewAt(0);
-//        }
-
     }
 
+    /**
+     * 释放资源
+     */
     public void release(){
         mXibaVideoPlayer.release();
         if (stateInfoList != null) {

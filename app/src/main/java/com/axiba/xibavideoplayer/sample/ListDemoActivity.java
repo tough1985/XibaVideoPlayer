@@ -44,7 +44,7 @@ public class ListDemoActivity extends AppCompatActivity {
     private String[] urls = {
             "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=10935&editionType=default",
             "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11528&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11527&editionType=default",
+            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11519&editionType=default",
             "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11526&editionType=default",
             "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11525&editionType=default",
             "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11524&editionType=default",
@@ -106,7 +106,6 @@ public class ListDemoActivity extends AppCompatActivity {
             if (convertView == null) {
                 convertView = inflater.inflate(R.layout.player_list_item, parent, false);
                 holder = new ViewHolder();
-//                holder.player = (XibaVideoPlayer) convertView.findViewById(R.id.player_list_item_XibaPlayer);
                 holder.container = (FrameLayout) convertView.findViewById(R.id.player_list_item_container);
                 holder.startBN = (Button) convertView.findViewById(R.id.player_list_item_play);
                 holder.fullscreenBN = (Button) convertView.findViewById(R.id.player_list_item_fullscreen);
@@ -134,7 +133,6 @@ public class ListDemoActivity extends AppCompatActivity {
     }
 
     private class ViewHolder{
-//        XibaVideoPlayer player;
         FrameLayout container;
         Button startBN;
         Button fullscreenBN;
