@@ -2,6 +2,7 @@ package com.axiba.xibavideoplayer.sample;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -126,6 +127,7 @@ public class ListDemoActivity extends AppCompatActivity {
                 holder.totalTimeTV = (TextView) convertView.findViewById(R.id.player_list_item_total_time);
                 holder.progressSeek = (SeekBar) convertView.findViewById(R.id.player_list_item_demo_seek);
 //                holder.cacheIV = (ImageView) convertView.findViewById(R.id.player_list_item_cache_IV);
+                holder.tinyscreenBN = (Button) convertView.findViewById(R.id.player_list_item_tinyscreen);
 
                 convertView.setTag(holder);
             } else {
@@ -134,6 +136,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
             holder.startBN.setOnClickListener(new StartListener(holder, position, getItem(position)));
             holder.fullscreenBN.setOnClickListener(new FullScreenListener(holder, position, getItem(position)));
+            holder.tinyscreenBN.setOnClickListener(new TinyScreenListener(holder, position, getItem(position)));
 
             /**
              * 调用XibaListPlayUtil.resolveItem来判断播放器是否添加到当前的item中
@@ -157,6 +160,7 @@ public class ListDemoActivity extends AppCompatActivity {
         TextView currentTimeTV;
         TextView totalTimeTV;
         SeekBar progressSeek;
+        Button tinyscreenBN;
 //        ImageView cacheIV;
     }
 
@@ -204,6 +208,34 @@ public class ListDemoActivity extends AppCompatActivity {
     }
 
     /**
+     * 小屏按钮监听
+     */
+    private class TinyScreenListener implements View.OnClickListener{
+        private ViewHolder holder;
+        private int position;
+        private String url;
+
+        public TinyScreenListener(ViewHolder holder, int position, String url) {
+            this.holder = holder;
+            this.position = position;
+            this.url = url;
+        }
+
+        @Override
+        public void onClick(View v) {
+
+            mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, eventCallback, new Point(500, 300), 600, 1400, true);
+            eventCallback.setHolder(holder);
+
+            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
+                holder.tinyscreenBN.setText("返回");
+            } else {
+                holder.tinyscreenBN.setText("小屏");
+            }
+        }
+    }
+
+    /**
      * 主要解决暂停问题
      * @param playerStateInfo
      * @param holder
@@ -230,12 +262,19 @@ public class ListDemoActivity extends AppCompatActivity {
 
             holder.progressSeek.setProgress(progress);
             holder.progressSeek.setEnabled(true);
+
+            if (playerStateInfo.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
+                holder.tinyscreenBN.setText("返回");
+            } else {
+                holder.tinyscreenBN.setText("小屏");
+            }
         } else {
             holder.startBN.setText("播放");
             holder.currentTimeTV.setText("00:00");
             holder.totalTimeTV.setText("00:00");
             holder.progressSeek.setProgress(0);
             holder.progressSeek.setEnabled(false);
+            holder.tinyscreenBN.setText("小屏");
         }
     }
 
@@ -468,6 +507,9 @@ public class ListDemoActivity extends AppCompatActivity {
         @Override
         public void onQuitTinyScreen() {
 
+            if (holder != null) {
+                holder.tinyscreenBN.setText("小屏");
+            }
         }
 
         @Override

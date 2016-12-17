@@ -64,6 +64,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     public static final int TINYSCREEN_ID = R.id.tinyscreen_id;
 
     private int fullScreenContainerID = NO_ID;
+
+    public static final String TINY_SCREEN_CONTAINER_TAG = "playerContainer";
     /**
      * 播放状态
      */
@@ -1139,6 +1141,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         mIndexInParent = mParent.indexOfChild(this);    //获取在父容器中的索引
         mLayoutParams = this.getLayoutParams();     //获取当前的布局参数
         mParent.removeView(this);     //将播放器从当前容器中移出
+        mParent.setTag(TINY_SCREEN_CONTAINER_TAG);
 
         this.setBackgroundColor(Color.BLACK);   //设置背景色
 
@@ -1208,7 +1211,12 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         if (mParent != null) {
             mParent.removeViewAt(mIndexInParent);   //移出占位用的View
-            mParent.addView(this, mIndexInParent, mLayoutParams);   //将播放器添加回原来的容器
+
+            //只有在父容器设置了tag的时候在返回，目的是避免在list中的错位
+            if (mParent.getTag() != null && mParent.getTag().equals(TINY_SCREEN_CONTAINER_TAG)) {
+                mParent.addView(this, mIndexInParent, mLayoutParams);   //将播放器添加回原来的容器
+            }
+
         }
 
         //还原位置
