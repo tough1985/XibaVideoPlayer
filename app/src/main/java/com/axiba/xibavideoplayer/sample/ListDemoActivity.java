@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
@@ -43,6 +44,8 @@ public class ListDemoActivity extends AppCompatActivity {
     private ListEventCallback eventCallback;
 
     private XibaListPlayUtil mXibaListPlayUtil;
+
+    private boolean isTrackingTouchSeekBar = false;     //是否正在控制SeekBar
 
     private String[] urls = {
             "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=10935&editionType=default",
@@ -87,6 +90,14 @@ public class ListDemoActivity extends AppCompatActivity {
         playerList.setAdapter(adapter);
 
         mXibaListPlayUtil = new XibaListPlayUtil(this);
+        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+            @Override
+            public void prePlayingItemPositionChange(int position, int targetPosition) {
+                if (eventCallback != null && eventCallback.getHolder() != null) {
+                    eventCallback.getHolder().progressSeek.setEnabled(false);
+                }
+            }
+        });
 
         eventCallback = new ListEventCallback();
     }
@@ -137,6 +148,7 @@ public class ListDemoActivity extends AppCompatActivity {
             holder.startBN.setOnClickListener(new StartListener(holder, position, getItem(position)));
             holder.fullscreenBN.setOnClickListener(new FullScreenListener(holder, position, getItem(position)));
             holder.tinyscreenBN.setOnClickListener(new TinyScreenListener(holder, position, getItem(position)));
+            holder.progressSeek.setOnSeekBarChangeListener(new SeekProgressListener(holder, position, getItem(position)));
 
             /**
              * 调用XibaListPlayUtil.resolveItem来判断播放器是否添加到当前的item中
@@ -147,7 +159,7 @@ public class ListDemoActivity extends AppCompatActivity {
             Log.e(TAG, "position" + position);
             Log.e(TAG, "playerStateInfo == null?" + (playerStateInfo == null));
 
-            initHolderUIByPlayerInfo(playerStateInfo, holder);
+            initHolderUIByPlayerInfo(playerStateInfo, holder, position);
 
             return convertView;
         }
@@ -235,12 +247,45 @@ public class ListDemoActivity extends AppCompatActivity {
         }
     }
 
+    private class SeekProgressListener implements SeekBar.OnSeekBarChangeListener{
+
+        private ViewHolder holder;
+        private int position;
+        private String url;
+
+        public SeekProgressListener(ViewHolder holder, int position, String url) {
+            this.holder = holder;
+            this.position = position;
+            this.url = url;
+        }
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            isTrackingTouchSeekBar = true;
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+            mXibaListPlayUtil.seekTo(url, position, holder.container,
+                    eventCallback, holder.progressSeek.getProgress(), holder.progressSeek.getMax());
+            eventCallback.setHolder(holder);
+            isTrackingTouchSeekBar = false;
+        }
+    }
+
     /**
      * 主要解决暂停问题
      * @param playerStateInfo
      * @param holder
      */
-    private void initHolderUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo, ViewHolder holder){
+    private void initHolderUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo, ViewHolder holder, int position){
         if (playerStateInfo != null) {
             if (playerStateInfo.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
                 holder.startBN.setText("暂停");
@@ -256,12 +301,14 @@ public class ListDemoActivity extends AppCompatActivity {
 
             int progress = (int) (currentTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
 
-//            Log.e(TAG, "totalTimeDuration=" + totalTimeDuration);
-//            Log.e(TAG, "currentTimePosition=" + currentTimePosition);
-//            Log.e(TAG, "progress=" + progress);
 
             holder.progressSeek.setProgress(progress);
-            holder.progressSeek.setEnabled(true);
+
+            if (playerStateInfo.getPosition() == position) {
+                holder.progressSeek.setEnabled(true);
+            } else {
+                holder.progressSeek.setEnabled(false);
+            }
 
             if (playerStateInfo.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 holder.tinyscreenBN.setText("返回");
@@ -378,6 +425,10 @@ public class ListDemoActivity extends AppCompatActivity {
             this.holder = holder;
         }
 
+        public ViewHolder getHolder(){
+            return holder;
+        }
+
         @Override
         public void onPlayerPrepare() {
             holder.startBN.setText("暂停");
@@ -393,7 +444,10 @@ public class ListDemoActivity extends AppCompatActivity {
             holder.currentTimeTV.setText(XibaUtil.stringForTime(currentTime));
             holder.totalTimeTV.setText(XibaUtil.stringForTime(totalTime));
 
-            holder.progressSeek.setProgress(progress);
+            if (!isTrackingTouchSeekBar) {
+                holder.progressSeek.setProgress(progress);
+            }
+
             holder.progressSeek.setSecondaryProgress(secProgress);
             if (!holder.progressSeek.isEnabled()) {
                 holder.progressSeek.setEnabled(true);

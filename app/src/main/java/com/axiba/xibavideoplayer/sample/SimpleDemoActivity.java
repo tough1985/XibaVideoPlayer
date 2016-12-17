@@ -54,6 +54,20 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
     private boolean isTrackingTouchSeekBar = false;     //是否正在控制SeekBar
 
+
+    private Button verticalFeatureNoneBN;
+    private Button verticalFeatureOnlyBrightnessBN;
+    private Button verticalFeatureOnlyVolumeBN;
+    private Button verticalFeatureLeftBrightnessBN;
+    private Button verticalFeatureLeftVolumeBN;
+
+    private VerticalFeatureListener mVerticalFeatureListener;
+
+    private Button horizontalFeatureNoneBN;
+    private Button horizontalFeatureChangePositionBN;
+
+    private HorizontalFeatureListener mHorizontalFeatureListener;
+
     String url = "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11086&editionType=default";
 
 
@@ -73,6 +87,15 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         fullScreenBN = (Button) findViewById(R.id.full_screen_BN);
         tinyScreenBN = (Button) findViewById(R.id.tiny_screen_BN);
 
+        verticalFeatureNoneBN = (Button) findViewById(R.id.demo_vertical_feature_none);
+        verticalFeatureOnlyBrightnessBN = (Button) findViewById(R.id.demo_vertical_feature_only_brightness);
+        verticalFeatureOnlyVolumeBN = (Button) findViewById(R.id.demo_vertical_feature_only_volume);
+        verticalFeatureLeftBrightnessBN = (Button) findViewById(R.id.demo_vertical_feature_left_brightness);
+        verticalFeatureLeftVolumeBN = (Button) findViewById(R.id.demo_vertical_feature_left_volume);
+
+        horizontalFeatureNoneBN = (Button) findViewById(R.id.demo_horizontal_feature_none);
+        horizontalFeatureChangePositionBN = (Button) findViewById(R.id.demo_horizontal_feature_change_position);
+
         xibaVP.setUp(url, 0, new Object[]{});
         xibaVP.setEventCallback(this);
         xibaVP.setAutoRotate(true);
@@ -81,6 +104,8 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         mStartButtonListener = new StartButtonListener();
         mSeekProgressListener = new SeekProgressListener();
         mStartFullScreenListener = new StartFullScreenListener();
+        mVerticalFeatureListener = new VerticalFeatureListener();
+        mHorizontalFeatureListener = new HorizontalFeatureListener();
 
         setListeners();
         demoSeek.setEnabled(false);
@@ -100,6 +125,15 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
                 }
             }
         });
+
+        verticalFeatureNoneBN.setOnClickListener(mVerticalFeatureListener);
+        verticalFeatureOnlyBrightnessBN.setOnClickListener(mVerticalFeatureListener);
+        verticalFeatureOnlyVolumeBN.setOnClickListener(mVerticalFeatureListener);
+        verticalFeatureLeftBrightnessBN .setOnClickListener(mVerticalFeatureListener);
+        verticalFeatureLeftVolumeBN.setOnClickListener(mVerticalFeatureListener);
+
+        horizontalFeatureNoneBN.setOnClickListener(mHorizontalFeatureListener);
+        horizontalFeatureChangePositionBN.setOnClickListener(mHorizontalFeatureListener);
     }
 
     /**
@@ -425,6 +459,8 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
             xibaVP.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             xibaVP.setAutoRotate(false);
+            xibaVP.setFullScreenVerticalFeature(XibaVideoPlayer.SCREEN_VERTICAL_LEFT_BRIGHTNESS);
+            xibaVP.setFullScreenHorizontalFeature(XibaVideoPlayer.SCREEN_HORIZONTAL_CHANGE_POSITION);
         }
     }
 
@@ -453,6 +489,54 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 //        xibaVP.startFullScreen(fullScreenContainer, hasActionBar, true);
 //    }
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --StartFullScreenListener end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+
+
+    private class VerticalFeatureListener implements View.OnClickListener{
+
+        @Override
+        public void onClick(View v) {
+            int feature = XibaVideoPlayer.SCREEN_VERTICAL_NONE;
+
+            switch (v.getId()) {
+                case R.id.demo_vertical_feature_none:
+                    feature = XibaVideoPlayer.SCREEN_VERTICAL_NONE;
+                    break;
+                case R.id.demo_vertical_feature_only_brightness:
+                    feature = XibaVideoPlayer.SCREEN_VERTICAL_ONLY_BRIGHTNESS;
+                    break;
+                case R.id.demo_vertical_feature_only_volume:
+                    feature = XibaVideoPlayer.SCREEN_VERTICAL_ONLY_VOLUME;
+                    break;
+                case R.id.demo_vertical_feature_left_brightness:
+                    feature = XibaVideoPlayer.SCREEN_VERTICAL_LEFT_BRIGHTNESS;
+                    break;
+                case R.id.demo_vertical_feature_left_volume:
+                    feature = XibaVideoPlayer.SCREEN_VERTICAL_LEFT_VOLUME;
+                    break;
+            }
+
+            xibaVP.setNormalScreenVerticalFeature(feature);
+        }
+    }
+
+    private class HorizontalFeatureListener implements View.OnClickListener{
+
+        @Override
+        public void onClick(View v) {
+            int feature = XibaVideoPlayer.SCREEN_HORIZONTAL_NONE;
+
+            switch (v.getId()) {
+                case R.id.demo_horizontal_feature_none:
+                    feature = XibaVideoPlayer.SCREEN_HORIZONTAL_NONE;
+                    break;
+                case R.id.demo_horizontal_feature_change_position:
+                    feature = XibaVideoPlayer.SCREEN_HORIZONTAL_CHANGE_POSITION;
+                    break;
+            }
+
+            xibaVP.setNormalScreenHorizontalFeature(feature);
+        }
+    }
 
     /**
      * 锁屏按钮监听

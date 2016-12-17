@@ -91,6 +91,43 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     private int mCurrentScreen = -1;                         //当前屏幕状态
     private int mSetUpScreen = -1;                          //初始时的屏幕状态
 
+    /**
+     * 垂直滑动时，什么都不做
+     */
+    public static final int SCREEN_VERTICAL_NONE = 0;
+    /**
+     *垂直滑动只改变声音
+     */
+    public static final int SCREEN_VERTICAL_ONLY_VOLUME = 1;
+    /**
+     * 垂直滑动只改变亮度
+     */
+    public static final int SCREEN_VERTICAL_ONLY_BRIGHTNESS = 2;
+    /**
+     * 垂直滑动左侧改变声音，右侧改变亮度
+     */
+    public static final int SCREEN_VERTICAL_LEFT_VOLUME = 3;
+    /**
+     * 垂直滑动左侧改变亮度，右侧改变声音
+     */
+    public static final int SCREEN_VERTICAL_LEFT_BRIGHTNESS = 4;
+
+    private int mNormalScreenVerticalFeature = SCREEN_VERTICAL_NONE;     //普通屏幕下垂直滑动的功能
+    private int mFullScreenVerticalFeature = SCREEN_VERTICAL_NONE;       //全屏下垂直滑动的功能
+
+    /**
+     * 水平滑动时，什么都不做
+     */
+    public static final int SCREEN_HORIZONTAL_NONE = 0;
+
+    /**
+     * 水平滑动时，改变播放位置
+     */
+    public static final int SCREEN_HORIZONTAL_CHANGE_POSITION = 1;
+
+    private int mNormalScreenHorizontalFeature = SCREEN_HORIZONTAL_NONE;    //普通屏幕下水平滑动的功能
+    private int mFullScreenHorizontalFeature = SCREEN_HORIZONTAL_NONE;      //全屏下水平滑动的功能
+
     protected String url;                                   //播放地址
 
     protected Map<String, String> mapHeadData = new HashMap<>();
@@ -422,26 +459,26 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         return true;
     }
 
-//    /**
-//     * 指定位置开始播放
-//     * @param progress
-//     */
-//    public void seekTo(int progress){
-//        if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
-//            long seekTime = progress * getDuration() / 100;
-//
-//            if (XibaMediaManager.getInstance().getMediaPlayer().isPlaying()) {
-//                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
-//            } else if(mCurrentState == STATE_PAUSE || mCurrentState == STATE_COMPLETE) {
-//                if (eventCallback != null) {
-//                    eventCallback.onPlayerResume();    //回调继续播放方法
-//                }
-//                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
-//                XibaMediaManager.getInstance().getMediaPlayer().start();
-//                setUiWithStateAndScreen(STATE_PLAYING);
-//            }
-//        }
-//    }
+    /**
+     * 指定位置开始播放
+     * @param progress
+     */
+    public void seekTo(int progress){
+        if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
+            long seekTime = progress * getDuration() / 100;
+
+            if (XibaMediaManager.getInstance().getMediaPlayer().isPlaying()) {
+                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
+            } else if(mCurrentState == STATE_PAUSE || mCurrentState == STATE_COMPLETE) {
+                if (eventCallback != null) {
+                    eventCallback.onPlayerResume();    //回调继续播放方法
+                }
+                XibaMediaManager.getInstance().getMediaPlayer().seekTo(seekTime);
+                XibaMediaManager.getInstance().getMediaPlayer().start();
+                setUiWithStateAndScreen(STATE_PLAYING);
+            }
+        }
+    }
 
     public void seekTo(long position){
         if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
@@ -640,35 +677,14 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
                     //如果当前没有给mTouchCurrentFeature添加任何功能，将在这里进行判断
                     default:
-                        if (absDeltaX >= TOUCH_SLOP) {      //改变播放进度
-                            mTouchCurrentFeature = CHANGING_POSITION;
-                            mDownPosition = getCurrentPositionWhenPlaying();//获取当前的播放位置
+                        if (absDeltaX >= TOUCH_SLOP) {      //进入水平滑动
 
-                            cancelProgressTimer();
-                        } else if (absDeltaY > TOUCH_SLOP) {
-                            if (mDownX < mScreenWidth * 0.5f) {
-                                mTouchCurrentFeature = CHANGING_BRIGHTNESS; //改变亮度
+                            firstHorizontalSlide();     //第一次进入水平滑动
 
-                                //如果windowManager没有设置过屏幕亮度，默认得到的亮度是-1f
-                                mDownBrightness = ((Activity)getContext()).getWindow().getAttributes().screenBrightness;
+                        } else if (absDeltaY > TOUCH_SLOP) {    //进入垂直滑动
 
-                                //如果是默认值 -1f 需要调用Setting获取屏幕亮度
-                                Log.e(TAG, "mDownBrightness=" + mDownBrightness);
-                                if (mDownBrightness <= 0.0f) {
-                                    try {
-                                        ContentResolver cr = getContext().getContentResolver();
-                                        int brightnsee = Settings.System.getInt(cr, Settings.System.SCREEN_BRIGHTNESS);
-                                        mDownBrightness = Float.valueOf(brightnsee) * (1f/255f);
-                                    } catch (Settings.SettingNotFoundException e) {
-                                        mDownBrightness = 0.1f;
-                                    }
-                                }
+                            firstVerticalSlide();   //第一次进入垂直滑动
 
-
-                            } else {
-                                mTouchCurrentFeature = CHANGING_VOLUME;     //改变音量
-                                mDownVolumn = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-                            }
                         }
                         break;
                 }
@@ -712,7 +728,107 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         return true;
     }
 
+    /**
+     * 第一次进入水平滑动，分配垂直滑动功能
+     */
+    private void firstHorizontalSlide(){
 
+        int screenHorizontalFeature = 0;
+
+        if (mCurrentScreen == SCREEN_NORMAL) {  //普通屏幕
+            screenHorizontalFeature = mNormalScreenHorizontalFeature;
+        } else if (mCurrentScreen == SCREEN_WINDOW_FULLSCREEN) {    //全屏模式
+            screenHorizontalFeature = mFullScreenHorizontalFeature;
+        }
+
+        confirmHorizontalFeature(screenHorizontalFeature);
+    }
+
+    /**
+     * 确认水平滑动的功能
+     * @param screenHorizontalFeature
+     */
+    private void confirmHorizontalFeature(int screenHorizontalFeature){
+
+        if (screenHorizontalFeature == SCREEN_HORIZONTAL_CHANGE_POSITION) {
+            //改变播放进度
+            mTouchCurrentFeature = CHANGING_POSITION;
+            mDownPosition = getCurrentPositionWhenPlaying();//获取当前的播放位置
+
+            cancelProgressTimer();
+        }
+    }
+
+    /**
+     * 第一次进入垂直滑动，分配垂直滑动功能
+     */
+    private void firstVerticalSlide(){
+        boolean isLeft;
+        int screenVerticalFeature = 0;
+
+        if (mDownX < mScreenWidth * 0.5f) {     //进入左侧滑动
+            isLeft = true;
+        } else {         //进入右侧滑动
+            isLeft = false;
+        }
+
+        if (mCurrentScreen == SCREEN_NORMAL) {  //普通屏幕
+            screenVerticalFeature = mNormalScreenVerticalFeature;
+        } else if (mCurrentScreen == SCREEN_WINDOW_FULLSCREEN) {    //全屏模式
+            screenVerticalFeature = mFullScreenVerticalFeature;
+        }
+
+        confirmVerticalFeature(screenVerticalFeature, isLeft);
+
+    }
+
+    /**
+     * 确认垂直滑动的功能
+     * @param screenVerticalFeature 全屏 或 普通屏幕
+     * @param isLeft 是否点击屏幕左侧
+     */
+    private void confirmVerticalFeature(int screenVerticalFeature, boolean isLeft){
+
+        if (screenVerticalFeature == SCREEN_VERTICAL_ONLY_BRIGHTNESS                            //1.只改变亮度
+                || (isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_BRIGHTNESS))       //2.左侧改变亮度，同时点击左侧
+                || (!isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_VOLUME))) {       //3.左侧改变声音，同时点击右侧
+            preChangeBrightness();
+        } else if (screenVerticalFeature == SCREEN_VERTICAL_ONLY_VOLUME                         //1.只改变声音
+                || (isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_VOLUME))           //2.左侧改变声音，同时点击左侧
+                || (!isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_BRIGHTNESS))) {   //3.左侧改变亮度，同时点击右侧
+            preChangeVolume();
+        }
+    }
+
+    /**
+     * 准备更改亮度 {@link #firstVerticalSlide}
+     */
+    private void preChangeBrightness(){
+        mTouchCurrentFeature = CHANGING_BRIGHTNESS; //改变亮度
+
+        //如果windowManager没有设置过屏幕亮度，默认得到的亮度是-1f
+        mDownBrightness = ((Activity)getContext()).getWindow().getAttributes().screenBrightness;
+
+        //如果是默认值 -1f 需要调用Setting获取屏幕亮度
+        Log.e(TAG, "mDownBrightness=" + mDownBrightness);
+        if (mDownBrightness <= 0.0f) {
+            try {
+                ContentResolver cr = getContext().getContentResolver();
+                int brightnsee = Settings.System.getInt(cr, Settings.System.SCREEN_BRIGHTNESS);
+                mDownBrightness = Float.valueOf(brightnsee) * (1f/255f);
+            } catch (Settings.SettingNotFoundException e) {
+                mDownBrightness = 0.1f;
+            }
+        }
+    }
+
+    /**
+     * 准备更改声音 {@link #firstVerticalSlide}
+     */
+    private void preChangeVolume(){
+        mTouchCurrentFeature = CHANGING_VOLUME;     //改变音量
+        mDownVolumn = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+    }
 
     /**
      * 处理单击 双击事件
@@ -1329,6 +1445,70 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     public void setAutoRotate(boolean autoRotate){
         mOrientationUtils.setAutoRotate(autoRotate);
+    }
+
+    /**
+     * 获取普通屏幕下，垂直滑动屏幕时的功能
+     * @return 垂直屏幕相关功能，默认{@link #SCREEN_VERTICAL_NONE}
+     */
+    public int getNormalScreenVerticalFeature() {
+        return mNormalScreenVerticalFeature;
+    }
+
+    /**
+     * 设置普通屏幕下，垂直滑动屏幕时的功能
+     * @param normalScreenVerticalFeature {@link #SCREEN_VERTICAL_NONE}
+     */
+    public void setNormalScreenVerticalFeature(int normalScreenVerticalFeature) {
+        this.mNormalScreenVerticalFeature = normalScreenVerticalFeature;
+    }
+
+    /**
+     * 获取全屏状态下，垂直滑动屏幕时的功能
+     * @return 垂直屏幕相关功能，{@link #SCREEN_VERTICAL_NONE}
+     */
+    public int getFullScreenVerticalFeature() {
+        return mFullScreenVerticalFeature;
+    }
+
+    /**
+     * 设置全屏状态下，垂直滑动屏幕时的功能
+     * @param fullScreenVerticalFeature {@link #SCREEN_VERTICAL_NONE}
+     */
+    public void setFullScreenVerticalFeature(int fullScreenVerticalFeature) {
+        this.mFullScreenVerticalFeature = fullScreenVerticalFeature;
+    }
+
+    /**
+     * 获取普通屏幕下，水平滑动屏幕时的功能
+     * @return 水平滑动屏幕相关功能，{@link #SCREEN_HORIZONTAL_NONE}
+     */
+    public int getNormalScreenHorizontalFeature() {
+        return mNormalScreenHorizontalFeature;
+    }
+
+    /**
+     * 设置普通屏幕下，水平滑动屏幕时的功能
+     * @param normalScreenHorizontalFeature {@link #SCREEN_HORIZONTAL_NONE}
+     */
+    public void setNormalScreenHorizontalFeature(int normalScreenHorizontalFeature) {
+        this.mNormalScreenHorizontalFeature = normalScreenHorizontalFeature;
+    }
+
+    /**
+     * 获取全屏状态下，水平滑动屏幕时的功能
+     * @return 水平滑动屏幕相关功能，{@link #SCREEN_HORIZONTAL_NONE}
+     */
+    public int getFullScreenHorizontalFeature() {
+        return mFullScreenHorizontalFeature;
+    }
+
+    /**
+     * 设置全屏状态下，水平滑动屏幕时的功能
+     * @param fullScreenHorizontalFeature
+     */
+    public void setFullScreenHorizontalFeature(int fullScreenHorizontalFeature) {
+        this.mFullScreenHorizontalFeature = fullScreenHorizontalFeature;
     }
 
     //**********↑↑↑↑↑↑↑↑↑↑ --播放相关的方法 end-- ↑↑↑↑↑↑↑↑↑↑**********

@@ -5,9 +5,6 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.media.Image;
-import android.nfc.cardemulation.OffHostApduService;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +34,16 @@ public class XibaListPlayUtil {
     private int mXibaVideoPlayerWidth;
     private int mXibaVideoPlayerHeight;
 
+    public interface PlayingItemPositionChange{
+        void prePlayingItemPositionChange(int position, int targetPosition);
+    }
+
+    private PlayingItemPositionChange playingItemPositionChangeImpl;
+
+    public void setPlayingItemPositionChangeImpl(PlayingItemPositionChange playingItemPositionChangeImpl){
+        this.playingItemPositionChangeImpl = playingItemPositionChangeImpl;
+    }
+
 
     public XibaListPlayUtil(Context context) {
         this.context = context;
@@ -63,12 +70,10 @@ public class XibaListPlayUtil {
 
         if (mPlayingPosition != position) {
             togglePlay(url, position, itemContainer, eventCallback);
-            mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-            mXibaVideoPlayer.setAutoRotate(false);
-        } else {
-            mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-            mXibaVideoPlayer.setAutoRotate(false);
         }
+
+        mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        mXibaVideoPlayer.setAutoRotate(false);
     }
 
     /**
@@ -119,6 +124,23 @@ public class XibaListPlayUtil {
         }
     }
 
+    public void seekTo(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
+                       int progress, int maxProgress){
+        if (mPlayingPosition != position) {
+            PlayerStateInfo stateInfo = stateInfoList.get(position);
+            if (stateInfo != null) {
+                long seekPosition = stateInfo.getDuration() * progress / maxProgress;
+                stateInfo.setPosition(seekPosition);
+            }
+
+
+            togglePlay(url, position, itemContainer, eventCallback);
+        } else {
+            mXibaVideoPlayer.seekTo(progress);
+        }
+
+    }
+
     /**
      * 暂停或播放
      */
@@ -153,6 +175,10 @@ public class XibaListPlayUtil {
     public boolean onBackPress(){
         if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
             quitFullScreen();
+            return true;
+        }
+        if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
+            quitTinyScreen();
             return true;
         }
         return false;
@@ -195,6 +221,9 @@ public class XibaListPlayUtil {
              */
 //            removeFromList(lastState);
             if (mPlayingPosition != -1) {
+
+                playingItemPositionChangeImpl.prePlayingItemPositionChange(mPlayingPosition, position);
+
                 removePlayerFromParent(lastState);
             }
 

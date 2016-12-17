@@ -71,23 +71,95 @@
             android:layout_toRightOf="@id/current_time"/>
     </RelativeLayout>
 
-    <Button
-        android:id="@+id/demo_play"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="play"/>
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/demo_play"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="play"/>
 
-    <Button
-        android:id="@+id/full_screen_BN"
+        <Button
+            android:id="@+id/full_screen_BN"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="全屏"/>
+
+        <Button
+            android:id="@+id/tiny_screen_BN"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="小屏"/>
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="全屏"/>
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/demo_vertical_feature_none"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="垂直none"/>
 
-    <Button
-        android:id="@+id/tiny_screen_BN"
+        <Button
+            android:id="@+id/demo_vertical_feature_only_brightness"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="只改亮度"/>
+
+        <Button
+            android:id="@+id/demo_vertical_feature_only_volume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="只改声音"/>
+
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="小屏"/>
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/demo_vertical_feature_left_brightness"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="左改亮度"/>
 
+        <Button
+            android:id="@+id/demo_vertical_feature_left_volume"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="左改声音"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/demo_horizontal_feature_none"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="水平none"/>
+
+        <Button
+            android:id="@+id/demo_horizontal_feature_change_position"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="水平改进度"/>
+    </LinearLayout>
 
 </LinearLayout>
