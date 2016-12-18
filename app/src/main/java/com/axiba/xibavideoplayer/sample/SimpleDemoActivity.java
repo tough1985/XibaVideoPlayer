@@ -228,6 +228,9 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
     public void onPlayerPrepare() {
         demoSeek.setEnabled(true);
         play.setText("暂停");
+
+        xibaVP.setHorizontalSlopInfluenceValue(4);
+        Log.e(TAG, "onPlayerPrepare: xibaVP.getDuration()=" + xibaVP.getDuration());
     }
 
     @Override

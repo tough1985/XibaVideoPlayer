@@ -128,6 +128,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     private int mNormalScreenHorizontalFeature = SCREEN_HORIZONTAL_NONE;    //普通屏幕下水平滑动的功能
     private int mFullScreenHorizontalFeature = SCREEN_HORIZONTAL_NONE;      //全屏下水平滑动的功能
 
+    /**
+     * 水平滑动的影响值，用来影响滑动屏幕时，改变的进度
+     */
+    private int mHorizontalSlopInfluenceValue = 1;
+
     protected String url;                                   //播放地址
 
     protected Map<String, String> mapHeadData = new HashMap<>();
@@ -618,7 +623,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                     //改变播放位置
                     case CHANGING_POSITION:
                         long totalTimeDuration = getDuration();
-                        mSeekTimePosition = (long) (mDownPosition + totalTimeDuration * deltaX / mScreenWidth);
+
+//                        mSeekTimePosition = (long) (mDownPosition + totalTimeDuration * deltaX / mScreenWidth);
+
+                        mSeekTimePosition = (long) (mDownPosition + totalTimeDuration * deltaX / (mScreenWidth * mHorizontalSlopInfluenceValue));
+
                         if (mSeekTimePosition > totalTimeDuration) {
                             mSeekTimePosition = totalTimeDuration;
                         } else if (mSeekTimePosition < 0) {
@@ -1509,6 +1518,25 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     public void setFullScreenHorizontalFeature(int fullScreenHorizontalFeature) {
         this.mFullScreenHorizontalFeature = fullScreenHorizontalFeature;
+    }
+
+    /**
+     * 获取水平滑动影响值
+     * @return
+     */
+    public int getHorizontalSlopInfluenceValue() {
+        return mHorizontalSlopInfluenceValue;
+    }
+
+    /**
+     * 设置水平滑动的影响值
+     * 例如参数为2，那么滑动整个屏幕改变整个播放器时长的一半
+     * 参数需要大于0的整数，传入参数如果小于等于0，自动将参数修改为1
+     * 推荐在onPlayerPrepare事件中，获取视频长度之后，根据需求修改此参数
+     * @param horizontalSlopInfluenceValue
+     */
+    public void setHorizontalSlopInfluenceValue(int horizontalSlopInfluenceValue) {
+        this.mHorizontalSlopInfluenceValue = horizontalSlopInfluenceValue <= 0 ? 1 : horizontalSlopInfluenceValue;
     }
 
     //**********↑↑↑↑↑↑↑↑↑↑ --播放相关的方法 end-- ↑↑↑↑↑↑↑↑↑↑**********
