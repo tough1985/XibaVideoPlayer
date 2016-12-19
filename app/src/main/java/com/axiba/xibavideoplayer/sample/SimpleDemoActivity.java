@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -39,6 +40,7 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
     private SeekBar volumeBrightSeek;
     private Button fullScreenBN;
     private Button tinyScreenBN;
+    private ProgressBar loadingPB;
 
     private Button backToNormalBN;
     private ViewGroup fullScreenContainer;
@@ -86,6 +88,7 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         volumeBrightSeek = (SeekBar) findViewById(R.id.volume_bright_seek);
         fullScreenBN = (Button) findViewById(R.id.full_screen_BN);
         tinyScreenBN = (Button) findViewById(R.id.tiny_screen_BN);
+        loadingPB = (ProgressBar) findViewById(R.id.loading_PB);
 
         verticalFeatureNoneBN = (Button) findViewById(R.id.demo_vertical_feature_none);
         verticalFeatureOnlyBrightnessBN = (Button) findViewById(R.id.demo_vertical_feature_only_brightness);
@@ -250,6 +253,11 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         if (!demoSeek.isEnabled()) {
             demoSeek.setEnabled(true);
         }
+
+
+        if (loadingPB.getVisibility() == View.VISIBLE) {
+            loadingPB.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -391,6 +399,13 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
     public void onTouchLockedScreen() {
         //显示或隐藏锁屏按钮
         toggleShowHideLockBN();
+    }
+
+    @Override
+    public void onStartLoading() {
+        if (loadingPB.getVisibility() != View.VISIBLE) {
+            loadingPB.setVisibility(View.VISIBLE);
+        }
     }
 
     //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --XibaVideoPlayerEventCallback methods end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑

@@ -132,6 +132,7 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                     break;
                 //开始
                 case MESSAGE_START:
+                    Log.d(TAG, "MediaHandler: MESSAGE_START");
                     if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
                         mediaPlayer.start();
                         mainThreadHandler.post(new Runnable() {
@@ -146,6 +147,7 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                     break;
                 //暂停
                 case MESSAGE_PAUSE:
+                    Log.d(TAG, "MediaHandler: MESSAGE_PAUSE");
                     if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                         mediaPlayer.pause();
                         mainThreadHandler.post(new Runnable() {

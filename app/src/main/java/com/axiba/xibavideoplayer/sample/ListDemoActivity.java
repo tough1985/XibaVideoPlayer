@@ -588,6 +588,11 @@ public class ListDemoActivity extends AppCompatActivity {
             }
         }
 
+        @Override
+        public void onStartLoading() {
+
+        }
+
     }
 
     /**

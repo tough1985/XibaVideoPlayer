@@ -201,6 +201,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     private OrientationUtils mOrientationUtils;
 
+    private boolean mIsBuffering = false;   //是否正在加载
+    private long mLastPosition = 0;
+    private boolean mIsLoading = false;
+
     /**
      * 监听是否有外部其他多媒体开始播放
      */
@@ -285,6 +289,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             cacheImageView.setVisibility(INVISIBLE);
         }
 
+        this.mIsLoading = false;
 
         return true;
     }
@@ -319,6 +324,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             cacheImageView.setImageBitmap(mCacheBitmap);
             cacheImageView.setVisibility(INVISIBLE);
         }
+
+        this.mIsLoading = false;
 
         return true;
     }
@@ -419,6 +426,12 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         //启动刷新播放进度的timer
         startProgressTimer();
+
+        //showLoading
+        if (eventCallback != null && !mIsLoading) {
+            mIsLoading = true;
+            eventCallback.onStartLoading();
+        }
     }
 
     /**
@@ -457,7 +470,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //            XibaMediaManager.getInstance().getMediaPlayer().start();
 //            setUiWithStateAndScreen(STATE_PLAYING);
             XibaMediaManager.getInstance().startPlayer();
-        } else if (mCurrentState == STATE_AUTO_COMPLETE) {              //如果当前是自动播放完成状态 -> 从头开始播放
+        } else if (mCurrentState == STATE_AUTO_COMPLETE
+                || mCurrentState == STATE_COMPLETE) {              //如果当前是自动播放完成状态 -> 从头开始播放
             //准备初始化播放
             prepareVideo();
         }
@@ -518,13 +532,13 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //                resetProgressAndTime();
                 break;
             case STATE_PLAYING:
-//            case STATE_PAUSE:
+            case STATE_PAUSE:
             case STATE_PLAYING_BUFFERING_START:
                 startProgressTimer();
                 //屏幕常亮
                 ((Activity) getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 break;
-            case STATE_PAUSE:
+//            case STATE_PAUSE:
             case STATE_COMPLETE:
             case STATE_AUTO_COMPLETE:
                 cancelProgressTimer();
@@ -1602,6 +1616,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onStart() {
+
+        Log.e(TAG, "onStart");
+
         if (eventCallback != null) {
             eventCallback.onPlayerResume();    //回调继续播放方法
         }
@@ -1615,6 +1632,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     @Override
     public void onPause() {
+        Log.e(TAG, "onPause");
 
         setUiWithStateAndScreen(STATE_PAUSE);
 
@@ -1652,6 +1670,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     public void onBufferingUpdate(int percent) {
         Log.d(TAG, "onBufferingUpdate : precent=" + percent);
         mCurrentBufferPercentage = percent;
+
+        if (percent > 0 && mIsBuffering) {
+            mIsBuffering = false;
+        }
     }
 
     @Override
@@ -1687,10 +1709,12 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                 break;
             case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
                 Log.e(TAG, "MEDIA_INFO_BUFFERING_START:");
+                mIsBuffering = true;
                 break;
             case IMediaPlayer.MEDIA_INFO_BUFFERING_END:
+//                mCurrentBufferPercentage = 100;         //缓冲完成，设置缓冲百分比为100
+                mIsBuffering = false;
                 Log.e(TAG, "MEDIA_INFO_BUFFERING_END:");
-                mCurrentBufferPercentage = 100;         //缓冲完成，设置缓冲百分比为100
                 break;
             case IMediaPlayer.MEDIA_INFO_NETWORK_BANDWIDTH:
                 Log.d(TAG, "MEDIA_INFO_NETWORK_BANDWIDTH: " + extra);
@@ -1762,12 +1786,14 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         @Override
         public void run() {
             if (mCurrentState == STATE_PLAYING
-//                    || mCurrentState == STATE_PAUSE
+                    || mCurrentState == STATE_PAUSE
                     || mCurrentState == STATE_PLAYING_BUFFERING_START) {
 
                 final long position = getCurrentPositionWhenPlaying();                   //当前播放位置
                 final long duration = getDuration();                                     //总时长
                 final int progress = (int) (position * 100 / (duration == 0 ? 1 : duration));   //播放进度
+
+                Log.e(TAG, "ProgressTimerTask: run position=" + position);
 
                 mTimerRunnable.setProgressInfo(progress, position, duration);
                 //由于Timer会另开一条线程工作，因此不能操作UI，所以使用Handler让回调方法在主线程工作
@@ -1781,6 +1807,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //                });
 
                 mHandler.post(mTimerRunnable);
+
+
             }
         }
     }
@@ -1792,6 +1820,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         private int progress;
         private long position;
         private long duration;
+
         public void setProgressInfo(int progress, long position, long duration){
             this.progress = progress;
             this.position = position;
@@ -1800,8 +1829,25 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         @Override
         public void run() {
             if (eventCallback != null) {
-                eventCallback.onPlayerProgressUpdate(progress, mCurrentBufferPercentage, position, duration);
+//                Log.e(TAG, "mCurrentBufferPercentage=" + mCurrentBufferPercentage);
+                if (mLastPosition == position && mIsBuffering) {
+
+                    if (!mIsLoading) {
+                        mIsLoading = true;
+                        //showLoading
+                        Log.e(TAG, "Player is Loading");
+
+                        eventCallback.onStartLoading();
+                    }
+
+                } else {
+                    if (mIsLoading) {
+                        mIsLoading = false;
+                    }
+                    eventCallback.onPlayerProgressUpdate(progress, mCurrentBufferPercentage, position, duration);
+                }
             }
+            mLastPosition = position;
         }
     }
 
