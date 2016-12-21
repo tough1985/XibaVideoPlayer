@@ -222,7 +222,9 @@ public class XibaListPlayUtil {
 //            removeFromList(lastState);
             if (mPlayingPosition != -1) {
 
-                playingItemPositionChangeImpl.prePlayingItemPositionChange(mPlayingPosition, position);
+                if (playingItemPositionChangeImpl != null) {
+                    playingItemPositionChangeImpl.prePlayingItemPositionChange(mPlayingPosition, position);
+                }
 
                 removePlayerFromParent(lastState);
             }

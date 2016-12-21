@@ -79,6 +79,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     public static final int STATE_ERROR = 7;                    //错误状态
 
     private int mCurrentState = -1;                       //当前的播放状态
+    private int mLastState = -1;                       //退出前的播放状态
 
     /**
      * 屏幕状态
@@ -568,6 +569,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 暂停
      */
     public void pausePlayer(){
+        mLastState = mCurrentState;
         if (mCurrentState == STATE_PLAYING || mCurrentState == STATE_PLAYING_BUFFERING_START || mCurrentState == STATE_PREPARING) {
             mCurrentState = STATE_PAUSE;
         }
@@ -583,7 +585,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     public void resumePlayer(){
 
-        if (mCurrentState == STATE_PAUSE) {
+        if (mCurrentState == STATE_PAUSE && mLastState != STATE_PAUSE) {
             if (cacheImageView.getVisibility() != VISIBLE) {
                 cacheImageView.setVisibility(VISIBLE);
             }
@@ -594,6 +596,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
                 prepareVideo();
             }
         }
+        mLastState = -1;
     }
 
 

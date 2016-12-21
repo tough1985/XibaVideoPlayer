@@ -1,23 +1,17 @@
 package com.axiba.xibavideoplayer.sample;
 
-import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.util.SparseArray;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -27,23 +21,21 @@ import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
- * Created by xiba on 2016/12/11.
+ * 基本上和ListView是一样的
+ * Created by xiba on 2016/12/21.
  */
+public class RecyclerViewDemoActivity extends AppCompatActivity {
 
-public class ListDemoActivity extends AppCompatActivity {
-    public static final String TAG = ListDemoActivity.class.getSimpleName();
+    public static final String TAG = RecyclerViewDemoActivity.class.getSimpleName();
 
-    private ListView playerList;
-    private PlayerListAdapter adapter;
-    private ListEventCallback eventCallback;
+    private RecyclerView mPlayerListRV;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private PlayerListAdapter mPlayerListAdapter;
 
     private XibaListPlayUtil mXibaListPlayUtil;
+
+    private ListEventCallback mEventCallback;
 
     private boolean isTrackingTouchSeekBar = false;     //是否正在控制SeekBar
 
@@ -74,108 +66,90 @@ public class ListDemoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list_demo);
+        setContentView(R.layout.activity_recyclerview_demo);
 
-        playerList = (ListView) findViewById(R.id.player_list);
-        adapter = new PlayerListAdapter(this);
-        playerList.setAdapter(adapter);
+        mPlayerListRV = (RecyclerView) findViewById(R.id.player_list_RV);
+
+        mLayoutManager = new LinearLayoutManager(this);
+        mPlayerListAdapter = new PlayerListAdapter();
+
+        mPlayerListRV.setLayoutManager(mLayoutManager);
+        mPlayerListRV.setHasFixedSize(true);
+        mPlayerListRV.setAdapter(mPlayerListAdapter);
+        mPlayerListRV.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 
         mXibaListPlayUtil = new XibaListPlayUtil(this);
-        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
-            @Override
-            public void prePlayingItemPositionChange(int position, int targetPosition) {
-                if (eventCallback != null && eventCallback.getHolder() != null) {
-                    eventCallback.getHolder().progressSeek.setEnabled(false);
-                }
-            }
-        });
 
-        eventCallback = new ListEventCallback();
+        mEventCallback = new ListEventCallback();
     }
 
-    private class PlayerListAdapter extends BaseAdapter{
+    private class PlayerListAdapter extends RecyclerView.Adapter<PlayerListAdapter.PlayerViewHolder>{
 
-        private LayoutInflater inflater;
+        @Override
+        public PlayerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        public PlayerListAdapter(Context context) {
-            this.inflater = LayoutInflater.from(context);
+            View v = LayoutInflater.from(RecyclerViewDemoActivity.this).inflate(R.layout.player_list_item, parent, false);
+
+            PlayerViewHolder holder = new PlayerViewHolder(v);
+
+            return holder;
         }
 
         @Override
-        public int getCount() {
-            return urls.length;
-        }
-
-        @Override
-        public String getItem(int position) {
-            return urls[position];
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder holder;
-            if (convertView == null) {
-                convertView = inflater.inflate(R.layout.player_list_item, parent, false);
-                holder = new ViewHolder();
-                holder.container = (FrameLayout) convertView.findViewById(R.id.player_list_item_container);
-                holder.startBN = (Button) convertView.findViewById(R.id.player_list_item_play);
-                holder.fullscreenBN = (Button) convertView.findViewById(R.id.player_list_item_fullscreen);
-                holder.currentTimeTV = (TextView) convertView.findViewById(R.id.player_list_item_current_time);
-                holder.totalTimeTV = (TextView) convertView.findViewById(R.id.player_list_item_total_time);
-                holder.progressSeek = (SeekBar) convertView.findViewById(R.id.player_list_item_demo_seek);
-//                holder.cacheIV = (ImageView) convertView.findViewById(R.id.player_list_item_cache_IV);
-                holder.tinyscreenBN = (Button) convertView.findViewById(R.id.player_list_item_tinyscreen);
-
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            holder.startBN.setOnClickListener(new StartListener(holder, position, getItem(position)));
-            holder.fullscreenBN.setOnClickListener(new FullScreenListener(holder, position, getItem(position)));
-            holder.tinyscreenBN.setOnClickListener(new TinyScreenListener(holder, position, getItem(position)));
-            holder.progressSeek.setOnSeekBarChangeListener(new SeekProgressListener(holder, position, getItem(position)));
+        public void onBindViewHolder(PlayerViewHolder holder, int position) {
+            holder.startBN.setOnClickListener(new StartListener(holder, position, urls[position]));
+            holder.fullscreenBN.setOnClickListener(new FullScreenListener(holder, position, urls[position]));
+            holder.tinyscreenBN.setOnClickListener(new TinyScreenListener(holder, position, urls[position]));
+            holder.progressSeek.setOnSeekBarChangeListener(new SeekProgressListener(holder, position, urls[position]));
 
             /**
              * 调用XibaListPlayUtil.resolveItem来判断播放器是否添加到当前的item中
              * 并根据返回的PlayerStateInfo来决定Item中其他控件的状态
              */
-            XibaListPlayUtil.PlayerStateInfo playerStateInfo = mXibaListPlayUtil.resolveItem(position, holder.container, eventCallback);
-
-            Log.e(TAG, "position" + position);
-            Log.e(TAG, "playerStateInfo == null?" + (playerStateInfo == null));
+            XibaListPlayUtil.PlayerStateInfo playerStateInfo = mXibaListPlayUtil.resolveItem(position, holder.container, mEventCallback);
 
             initHolderUIByPlayerInfo(playerStateInfo, holder, position);
-
-            return convertView;
         }
-    }
 
-    private class ViewHolder{
-        FrameLayout container;
-        Button startBN;
-        Button fullscreenBN;
-        TextView currentTimeTV;
-        TextView totalTimeTV;
-        SeekBar progressSeek;
-        Button tinyscreenBN;
-//        ImageView cacheIV;
+        @Override
+        public int getItemCount() {
+            return urls.length;
+        }
+
+
+        class PlayerViewHolder extends RecyclerView.ViewHolder{
+
+            FrameLayout container;
+            Button startBN;
+            Button fullscreenBN;
+            TextView currentTimeTV;
+            TextView totalTimeTV;
+            SeekBar progressSeek;
+            Button tinyscreenBN;
+
+            public PlayerViewHolder(View itemView) {
+                super(itemView);
+
+                container = (FrameLayout) itemView.findViewById(R.id.player_list_item_container);
+                startBN = (Button) itemView.findViewById(R.id.player_list_item_play);
+                fullscreenBN = (Button) itemView.findViewById(R.id.player_list_item_fullscreen);
+                currentTimeTV = (TextView) itemView.findViewById(R.id.player_list_item_current_time);
+                totalTimeTV = (TextView) itemView.findViewById(R.id.player_list_item_total_time);
+                progressSeek = (SeekBar) itemView.findViewById(R.id.player_list_item_demo_seek);
+                tinyscreenBN = (Button) itemView.findViewById(R.id.player_list_item_tinyscreen);
+            }
+        }
     }
 
     /**
      * 播放按钮监听
      */
     private class StartListener implements View.OnClickListener{
-        private ViewHolder holder;
+        private PlayerListAdapter.PlayerViewHolder holder;
         private int position;
         private String url;
 
-        public StartListener(ViewHolder holder, int position, String url) {
+        public StartListener(PlayerListAdapter.PlayerViewHolder holder, int position, String url) {
             this.holder = holder;
             this.position = position;
             this.url = url;
@@ -184,8 +158,8 @@ public class ListDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
 
-            mXibaListPlayUtil.togglePlay(url, position, holder.container, eventCallback);
-            eventCallback.setHolder(holder);
+            mXibaListPlayUtil.togglePlay(url, position, holder.container, mEventCallback);
+            mEventCallback.setHolder(holder);
         }
     }
 
@@ -193,11 +167,11 @@ public class ListDemoActivity extends AppCompatActivity {
      * 全屏按钮监听
      */
     private class FullScreenListener implements View.OnClickListener{
-        private ViewHolder holder;
+        private PlayerListAdapter.PlayerViewHolder holder;
         private int position;
         private String url;
 
-        public FullScreenListener(ViewHolder holder, int position, String url) {
+        public FullScreenListener(PlayerListAdapter.PlayerViewHolder holder, int position, String url) {
             this.holder = holder;
             this.position = position;
             this.url = url;
@@ -205,8 +179,8 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            mXibaListPlayUtil.startFullScreen(url, position, holder.container, eventCallback);
-            eventCallback.setHolder(holder);
+            mXibaListPlayUtil.startFullScreen(url, position, holder.container, mEventCallback);
+            mEventCallback.setHolder(holder);
         }
     }
 
@@ -214,11 +188,11 @@ public class ListDemoActivity extends AppCompatActivity {
      * 小屏按钮监听
      */
     private class TinyScreenListener implements View.OnClickListener{
-        private ViewHolder holder;
+        private PlayerListAdapter.PlayerViewHolder holder;
         private int position;
         private String url;
 
-        public TinyScreenListener(ViewHolder holder, int position, String url) {
+        public TinyScreenListener(PlayerListAdapter.PlayerViewHolder holder, int position, String url) {
             this.holder = holder;
             this.position = position;
             this.url = url;
@@ -227,8 +201,8 @@ public class ListDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
 
-            mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, eventCallback, new Point(500, 300), 600, 1400, true);
-            eventCallback.setHolder(holder);
+            mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, mEventCallback, new Point(500, 300), 600, 1400, true);
+            mEventCallback.setHolder(holder);
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 holder.tinyscreenBN.setText("返回");
@@ -238,13 +212,14 @@ public class ListDemoActivity extends AppCompatActivity {
         }
     }
 
+
     private class SeekProgressListener implements SeekBar.OnSeekBarChangeListener{
 
-        private ViewHolder holder;
+        private PlayerListAdapter.PlayerViewHolder holder;
         private int position;
         private String url;
 
-        public SeekProgressListener(ViewHolder holder, int position, String url) {
+        public SeekProgressListener(PlayerListAdapter.PlayerViewHolder holder, int position, String url) {
             this.holder = holder;
             this.position = position;
             this.url = url;
@@ -265,8 +240,8 @@ public class ListDemoActivity extends AppCompatActivity {
         public void onStopTrackingTouch(SeekBar seekBar) {
 
             mXibaListPlayUtil.seekTo(url, position, holder.container,
-                    eventCallback, holder.progressSeek.getProgress(), holder.progressSeek.getMax());
-            eventCallback.setHolder(holder);
+                    mEventCallback, holder.progressSeek.getProgress(), holder.progressSeek.getMax());
+            mEventCallback.setHolder(holder);
             isTrackingTouchSeekBar = false;
         }
     }
@@ -276,7 +251,7 @@ public class ListDemoActivity extends AppCompatActivity {
      * @param playerStateInfo
      * @param holder
      */
-    private void initHolderUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo, ViewHolder holder, int position){
+    private void initHolderUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo, PlayerListAdapter.PlayerViewHolder holder, int position){
         if (playerStateInfo != null) {
             if (playerStateInfo.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
                 holder.startBN.setText("暂停");
@@ -319,7 +294,7 @@ public class ListDemoActivity extends AppCompatActivity {
     /**
      * 初始化全屏控件
      */
-    private void initFullScreenUI(ViewHolder holder){
+    private void initFullScreenUI(PlayerListAdapter.PlayerViewHolder holder){
 
         if (fullScreenContainer != null){
             fScreenPlayBN = (Button) fullScreenContainer.findViewById(R.id.demo_play);
@@ -405,18 +380,15 @@ public class ListDemoActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * 播放器回调事件
-     */
     private class ListEventCallback implements XibaVideoPlayerEventCallback{
 
-        private ViewHolder holder;
+        private PlayerListAdapter.PlayerViewHolder holder;
 
-        public void setHolder(ViewHolder holder) {
+        public void setHolder(PlayerListAdapter.PlayerViewHolder holder) {
             this.holder = holder;
         }
 
-        public ViewHolder getHolder(){
+        public PlayerListAdapter.PlayerViewHolder getHolder(){
             return holder;
         }
 
@@ -530,7 +502,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public ViewGroup onEnterFullScreen() {
-            ViewGroup contentView = (ViewGroup) ListDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
+            ViewGroup contentView = (ViewGroup) RecyclerViewDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
 
             fullScreenContainer = (ViewGroup) getLayoutInflater()
                     .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
@@ -583,7 +555,6 @@ public class ListDemoActivity extends AppCompatActivity {
         public void onStartLoading() {
 
         }
-
     }
 
     /**
