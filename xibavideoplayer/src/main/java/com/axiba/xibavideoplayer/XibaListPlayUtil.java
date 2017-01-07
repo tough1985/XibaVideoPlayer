@@ -5,11 +5,17 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by xiba on 2016/12/13.
@@ -34,16 +40,63 @@ public class XibaListPlayUtil {
     private int mXibaVideoPlayerWidth;
     private int mXibaVideoPlayerHeight;
 
+    //切换播放条目接口
     public interface PlayingItemPositionChange{
         void prePlayingItemPositionChange(int position, int targetPosition);
+        void prePlayingItemPositionChange(Message utilMsg);
     }
 
     private PlayingItemPositionChange playingItemPositionChangeImpl;
 
+    /**
+     * 设置接口
+     * @param playingItemPositionChangeImpl
+     */
     public void setPlayingItemPositionChangeImpl(PlayingItemPositionChange playingItemPositionChangeImpl){
         this.playingItemPositionChangeImpl = playingItemPositionChangeImpl;
     }
 
+//    private HandlerThread mHandlerThread;
+    private UtilHandler mUtilHandler;
+//    private Handler mMainHandler;
+
+    private class UtilHandler extends Handler{
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+
+
+                    if (msg != null) {
+                        Map<String, Object> msgObj = (Map<String, Object>) msg.obj;
+                        ViewGroup itemContainer = (ViewGroup) msgObj.get("itemContainer");
+                        XibaVideoPlayerEventCallback eventCallback = (XibaVideoPlayerEventCallback) msgObj.get("eventCallback");
+                        int position = (int) msgObj.get("position");
+                        String url = (String) msgObj.get("url");
+                        int lastState = (int) msgObj.get("lastState");
+
+                        removePlayerFromParent(lastState);
+                        //设置播放索引为当前索引
+                        mPlayingPosition = position;
+
+                        //如果有保存播放信息，恢复上次播放位置
+                        PlayerStateInfo playerStateInfo = stateInfoList.get(position);
+                        if (playerStateInfo != null) {
+                            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
+                        } else {
+                            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
+                        }
+
+                        addToListItem(itemContainer, eventCallback);    //添加到ItemContainer
+
+                        mXibaVideoPlayer.togglePlayPause();
+                    }
+
+                    break;
+            }
+        }
+    }
 
     public XibaListPlayUtil(Context context) {
         this.context = context;
@@ -53,6 +106,12 @@ public class XibaListPlayUtil {
     private void init(Context context) {
         mXibaVideoPlayer = new XibaVideoPlayer(context);
         stateInfoList = new SparseArray<>();
+
+//        mHandlerThread = new HandlerThread(TAG);
+//
+        mUtilHandler = new UtilHandler();
+//
+//        mMainHandler = new Handler(context.getMainLooper());
     }
 
     /**
@@ -61,8 +120,12 @@ public class XibaListPlayUtil {
      * @param position
      * @param itemContainer
      * @param eventCallback
+     * @param fullScreenEventCallback
      */
-    public void startFullScreen(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback){
+    public void startFullScreen(String url, int position, ViewGroup itemContainer,
+                                XibaVideoPlayerEventCallback eventCallback,
+                                XibaFullScreenEventCallback fullScreenEventCallback){
+
         if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY
                 || mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
             return;
@@ -72,6 +135,7 @@ public class XibaListPlayUtil {
             togglePlay(url, position, itemContainer, eventCallback);
         }
 
+        mXibaVideoPlayer.setFullScreenEventCallback(fullScreenEventCallback);
         mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         mXibaVideoPlayer.setAutoRotate(false);
     }
@@ -83,13 +147,14 @@ public class XibaListPlayUtil {
 
         mXibaVideoPlayer.quitFullScreen();
         savePlayerInfo();
+        mXibaVideoPlayer.setFullScreenEventCallback(null);
     }
 
     /**
      * 退出小屏
      */
-    public void quitTinyScreen(){
-        mXibaVideoPlayer.quitTinyScreen();
+    public void quitTinyScreen(ViewGroup itemContainer){
+        mXibaVideoPlayer.quitTinyScreen(itemContainer);
         savePlayerInfo();
     }
 
@@ -106,13 +171,14 @@ public class XibaListPlayUtil {
      */
     public void toggleTinyScreen(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
                                  Point size, float x, float y, boolean canMove){
+
         if (mPlayingPosition != position) {
             togglePlay(url, position, itemContainer, eventCallback);
             mXibaVideoPlayer.startTinyScreen(size, x, y, canMove);
             savePlayerInfo();
         } else {
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
-                quitTinyScreen();
+                quitTinyScreen(itemContainer);
             } else {
                 if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
                     return;
@@ -164,6 +230,10 @@ public class XibaListPlayUtil {
         return mXibaVideoPlayer.isScreenLock();
     }
 
+    public int getPlayingPosition(){
+        return mPlayingPosition;
+    }
+
     /**
      * 设置锁屏状态
      * @param lock
@@ -178,7 +248,7 @@ public class XibaListPlayUtil {
             return true;
         }
         if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
-            quitTinyScreen();
+            quitTinyScreen(null);
             return true;
         }
         return false;
@@ -201,7 +271,7 @@ public class XibaListPlayUtil {
         if (mPlayingPosition != position) {
 
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
-                quitTinyScreen();
+                quitTinyScreen(itemContainer);
             }
 
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
@@ -210,11 +280,11 @@ public class XibaListPlayUtil {
 
             int lastState = mXibaVideoPlayer.getCurrentState();
 
-            //如果播放器为播放状态，暂停播放器
-            if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
-                    || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
-                mXibaVideoPlayer.pausePlayer();
-            }
+//            //如果播放器为播放状态，暂停播放器
+//            if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
+//                    || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
+//                mXibaVideoPlayer.pausePlayer();
+//            }
             
             /**
              * 先保存，删除，然后setUp播放器，最后再添加到itemContainer
@@ -223,27 +293,59 @@ public class XibaListPlayUtil {
             if (mPlayingPosition != -1) {
 
                 if (playingItemPositionChangeImpl != null) {
-                    playingItemPositionChangeImpl.prePlayingItemPositionChange(mPlayingPosition, position);
+
+
+                    Map<String, Object> msgObj = new HashMap<>();
+                    msgObj.put("itemContainer", itemContainer);
+                    msgObj.put("eventCallback", eventCallback);
+                    msgObj.put("position", position);
+                    msgObj.put("url", url);
+                    msgObj.put("lastState", lastState);
+
+
+                    Message utilMsg = mUtilHandler.obtainMessage(0, msgObj);
+
+                    playingItemPositionChangeImpl.prePlayingItemPositionChange(utilMsg);
+
+//                    playingItemPositionChangeImpl.prePlayingItemPositionChange(mPlayingPosition, position);
                 }
 
-                removePlayerFromParent(lastState);
-            }
+                //如果播放器为播放状态，暂停播放器
+                if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
+                        || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
+                    mXibaVideoPlayer.pausePlayer();
+                }
 
-            //设置播放索引为当前索引
-            mPlayingPosition = position;
-
-            //如果有保存播放信息，恢复上次播放位置
-            PlayerStateInfo playerStateInfo = stateInfoList.get(position);
-            if (playerStateInfo != null) {
-                mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
+//                removePlayerFromParent(lastState);
             } else {
-                mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
+
+                //设置播放索引为当前索引
+                mPlayingPosition = position;
+
+                //如果有保存播放信息，恢复上次播放位置
+                PlayerStateInfo playerStateInfo = stateInfoList.get(position);
+                if (playerStateInfo != null) {
+                    mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
+                } else {
+                    mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
+                }
+
+                addToListItem(itemContainer, eventCallback);    //添加到ItemContainer
+
+                mXibaVideoPlayer.togglePlayPause();
+
+                //如果播放器为播放状态，暂停播放器
+                if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
+                        || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
+                    mXibaVideoPlayer.pausePlayer();
+                }
             }
 
-            addToListItem(itemContainer, eventCallback);    //添加到ItemContainer
         }
+        else{
 
-        mXibaVideoPlayer.togglePlayPause();
+            mXibaVideoPlayer.togglePlayPause();
+        }
 
     }
 
@@ -338,6 +440,13 @@ public class XibaListPlayUtil {
         mXibaVideoPlayer.setTag(PLAYER_TAG_ITEM_CONTAINER);
         mXibaVideoPlayer.setEventCallback(eventCallback);
 
+    }
+
+    public void removePlayer(int position){
+        if (position == mPlayingPosition) {
+            removePlayerFromParent();
+            addToContentView();
+        }
     }
 
     /**
@@ -572,5 +681,6 @@ public class XibaListPlayUtil {
         public void setCurrentScreen(int currentScreen) {
             this.currentScreen = currentScreen;
         }
+
     }
 }

@@ -95,39 +95,39 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     /**
      * 垂直滑动时，什么都不做
      */
-    public static final int SCREEN_VERTICAL_NONE = 0;
+    public static final int SLIDING_VERTICAL_NONE = 0;
     /**
      *垂直滑动只改变声音
      */
-    public static final int SCREEN_VERTICAL_ONLY_VOLUME = 1;
+    public static final int SLIDING_VERTICAL_ONLY_VOLUME = 1;
     /**
      * 垂直滑动只改变亮度
      */
-    public static final int SCREEN_VERTICAL_ONLY_BRIGHTNESS = 2;
+    public static final int SLIDING_VERTICAL_ONLY_BRIGHTNESS = 2;
     /**
      * 垂直滑动左侧改变声音，右侧改变亮度
      */
-    public static final int SCREEN_VERTICAL_LEFT_VOLUME = 3;
+    public static final int SLIDING_VERTICAL_LEFT_VOLUME = 3;
     /**
      * 垂直滑动左侧改变亮度，右侧改变声音
      */
-    public static final int SCREEN_VERTICAL_LEFT_BRIGHTNESS = 4;
+    public static final int SLIDING_VERTICAL_LEFT_BRIGHTNESS = 4;
 
-    private int mNormalScreenVerticalFeature = SCREEN_VERTICAL_NONE;     //普通屏幕下垂直滑动的功能
-    private int mFullScreenVerticalFeature = SCREEN_VERTICAL_NONE;       //全屏下垂直滑动的功能
+    private int mNormalScreenVerticalFeature = SLIDING_VERTICAL_NONE;     //普通屏幕下垂直滑动的功能
+    private int mFullScreenVerticalFeature = SLIDING_VERTICAL_NONE;       //全屏下垂直滑动的功能
 
     /**
      * 水平滑动时，什么都不做
      */
-    public static final int SCREEN_HORIZONTAL_NONE = 0;
+    public static final int SLIDING_HORIZONTAL_NONE = 0;
 
     /**
      * 水平滑动时，改变播放位置
      */
-    public static final int SCREEN_HORIZONTAL_CHANGE_POSITION = 1;
+    public static final int SLIDING_HORIZONTAL_CHANGE_POSITION = 1;
 
-    private int mNormalScreenHorizontalFeature = SCREEN_HORIZONTAL_NONE;    //普通屏幕下水平滑动的功能
-    private int mFullScreenHorizontalFeature = SCREEN_HORIZONTAL_NONE;      //全屏下水平滑动的功能
+    private int mNormalScreenHorizontalFeature = SLIDING_HORIZONTAL_NONE;    //普通屏幕下水平滑动的功能
+    private int mFullScreenHorizontalFeature = SLIDING_HORIZONTAL_NONE;      //全屏下水平滑动的功能
 
     /**
      * 水平滑动的影响值，用来影响滑动屏幕时，改变的进度
@@ -143,6 +143,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     protected AudioManager mAudioManager;                   //音频焦点的监听
 
     protected XibaVideoPlayerEventCallback eventCallback;   //播放器事件回调接口
+    protected XibaFullScreenEventCallback mFScreenEventCallback;    //全屏相关事件回调接口
 
     private XibaResizeTextureView textureView;              //播放器显示Texture
     private XibaResizeImageView cacheImageView;
@@ -338,6 +339,14 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     public void setEventCallback(XibaVideoPlayerEventCallback eventCallback) {
         this.eventCallback = eventCallback;
+    }
+
+    /**
+     * 设置全屏事件相关回调接口
+     * @param fullScreenEventCallback
+     */
+    public void setFullScreenEventCallback(XibaFullScreenEventCallback fullScreenEventCallback){
+        this.mFScreenEventCallback = fullScreenEventCallback;
     }
 
     /**
@@ -776,7 +785,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     private void confirmHorizontalFeature(int screenHorizontalFeature){
 
-        if (screenHorizontalFeature == SCREEN_HORIZONTAL_CHANGE_POSITION) {
+        if (screenHorizontalFeature == SLIDING_HORIZONTAL_CHANGE_POSITION) {
             //改变播放进度
             mTouchCurrentFeature = CHANGING_POSITION;
             mDownPosition = getCurrentPositionWhenPlaying();//获取当前的播放位置
@@ -815,13 +824,13 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     private void confirmVerticalFeature(int screenVerticalFeature, boolean isLeft){
 
-        if (screenVerticalFeature == SCREEN_VERTICAL_ONLY_BRIGHTNESS                            //1.只改变亮度
-                || (isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_BRIGHTNESS))       //2.左侧改变亮度，同时点击左侧
-                || (!isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_VOLUME))) {       //3.左侧改变声音，同时点击右侧
+        if (screenVerticalFeature == SLIDING_VERTICAL_ONLY_BRIGHTNESS                            //1.只改变亮度
+                || (isLeft && (screenVerticalFeature == SLIDING_VERTICAL_LEFT_BRIGHTNESS))       //2.左侧改变亮度，同时点击左侧
+                || (!isLeft && (screenVerticalFeature == SLIDING_VERTICAL_LEFT_VOLUME))) {       //3.左侧改变声音，同时点击右侧
             preChangeBrightness();
-        } else if (screenVerticalFeature == SCREEN_VERTICAL_ONLY_VOLUME                         //1.只改变声音
-                || (isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_VOLUME))           //2.左侧改变声音，同时点击左侧
-                || (!isLeft && (screenVerticalFeature == SCREEN_VERTICAL_LEFT_BRIGHTNESS))) {   //3.左侧改变亮度，同时点击右侧
+        } else if (screenVerticalFeature == SLIDING_VERTICAL_ONLY_VOLUME                         //1.只改变声音
+                || (isLeft && (screenVerticalFeature == SLIDING_VERTICAL_LEFT_VOLUME))           //2.左侧改变声音，同时点击左侧
+                || (!isLeft && (screenVerticalFeature == SLIDING_VERTICAL_LEFT_BRIGHTNESS))) {   //3.左侧改变亮度，同时点击右侧
             preChangeVolume();
         }
     }
@@ -1041,8 +1050,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         ViewGroup fullScreenContainer = null;
         //进入全屏事件回调
-        if (eventCallback != null) {
-            fullScreenContainer = eventCallback.onEnterFullScreen();
+//        if (eventCallback != null) {
+//            fullScreenContainer = eventCallback.onEnterFullScreen();
+//        }
+        if (mFScreenEventCallback != null) {
+            fullScreenContainer = mFScreenEventCallback.onEnterFullScreen();
         }
 
         if (fullScreenContainer == null) {
@@ -1132,8 +1144,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
         mOrientationUtils.setOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        if (eventCallback != null) {
-            eventCallback.onQuitFullScreen();   //调用退出全屏回调事件
+//        if (eventCallback != null) {
+//            eventCallback.onQuitFullScreen();   //调用退出全屏回调事件
+//        }
+        if (mFScreenEventCallback != null) {
+            mFScreenEventCallback.onQuitFullScreen();   //调用退出全屏回调事件
         }
 
         //改变texture尺寸
@@ -1335,6 +1350,12 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     }
 
 
+    public void quitTinyScreen(ViewGroup container){
+        if (container != null) {
+            mParent = container;
+        }
+        quitTinyScreen();
+    }
     /**
      * 退出小屏
      */
@@ -1352,7 +1373,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         contentView.removeView(this);
 
         if (mParent != null) {
-            mParent.removeViewAt(mIndexInParent);   //移出占位用的View
+            if (mParent.getChildCount() > mIndexInParent) {
+                mParent.removeViewAt(mIndexInParent);   //移出占位用的View
+            }
 
             //只有在父容器设置了tag的时候在返回，目的是避免在list中的错位
             if (mParent.getTag() != null && mParent.getTag().equals(TINY_SCREEN_CONTAINER_TAG)) {
@@ -1475,7 +1498,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获取普通屏幕下，垂直滑动屏幕时的功能
-     * @return 垂直屏幕相关功能，默认{@link #SCREEN_VERTICAL_NONE}
+     * @return 垂直屏幕相关功能，默认{@link #SLIDING_VERTICAL_NONE}
      */
     public int getNormalScreenVerticalFeature() {
         return mNormalScreenVerticalFeature;
@@ -1483,7 +1506,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 设置普通屏幕下，垂直滑动屏幕时的功能
-     * @param normalScreenVerticalFeature {@link #SCREEN_VERTICAL_NONE}
+     * @param normalScreenVerticalFeature {@link #SLIDING_VERTICAL_NONE}
      */
     public void setNormalScreenVerticalFeature(int normalScreenVerticalFeature) {
         this.mNormalScreenVerticalFeature = normalScreenVerticalFeature;
@@ -1491,7 +1514,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获取全屏状态下，垂直滑动屏幕时的功能
-     * @return 垂直屏幕相关功能，{@link #SCREEN_VERTICAL_NONE}
+     * @return 垂直屏幕相关功能，{@link #SLIDING_VERTICAL_NONE}
      */
     public int getFullScreenVerticalFeature() {
         return mFullScreenVerticalFeature;
@@ -1499,7 +1522,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 设置全屏状态下，垂直滑动屏幕时的功能
-     * @param fullScreenVerticalFeature {@link #SCREEN_VERTICAL_NONE}
+     * @param fullScreenVerticalFeature {@link #SLIDING_VERTICAL_NONE}
      */
     public void setFullScreenVerticalFeature(int fullScreenVerticalFeature) {
         this.mFullScreenVerticalFeature = fullScreenVerticalFeature;
@@ -1507,7 +1530,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获取普通屏幕下，水平滑动屏幕时的功能
-     * @return 水平滑动屏幕相关功能，{@link #SCREEN_HORIZONTAL_NONE}
+     * @return 水平滑动屏幕相关功能，{@link #SLIDING_HORIZONTAL_NONE}
      */
     public int getNormalScreenHorizontalFeature() {
         return mNormalScreenHorizontalFeature;
@@ -1515,7 +1538,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 设置普通屏幕下，水平滑动屏幕时的功能
-     * @param normalScreenHorizontalFeature {@link #SCREEN_HORIZONTAL_NONE}
+     * @param normalScreenHorizontalFeature {@link #SLIDING_HORIZONTAL_NONE}
      */
     public void setNormalScreenHorizontalFeature(int normalScreenHorizontalFeature) {
         this.mNormalScreenHorizontalFeature = normalScreenHorizontalFeature;
@@ -1523,7 +1546,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获取全屏状态下，水平滑动屏幕时的功能
-     * @return 水平滑动屏幕相关功能，{@link #SCREEN_HORIZONTAL_NONE}
+     * @return 水平滑动屏幕相关功能，{@link #SLIDING_HORIZONTAL_NONE}
      */
     public int getFullScreenHorizontalFeature() {
         return mFullScreenHorizontalFeature;

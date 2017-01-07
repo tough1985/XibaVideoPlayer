@@ -2,6 +2,7 @@ package com.axiba.xibavideoplayer.sample;
 
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,6 +17,7 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.axiba.xibavideoplayer.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.XibaVideoPlayerEventCallback;
@@ -36,6 +38,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
     private XibaListPlayUtil mXibaListPlayUtil;
 
     private ListEventCallback mEventCallback;
+    private ListFullScreenEventCallback mFScreenEventCallback;
 
     private boolean isTrackingTouchSeekBar = false;     //是否正在控制SeekBar
 
@@ -81,6 +84,22 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         mXibaListPlayUtil = new XibaListPlayUtil(this);
 
         mEventCallback = new ListEventCallback();
+        mFScreenEventCallback = new ListFullScreenEventCallback();
+
+        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+            @Override
+            public void prePlayingItemPositionChange(int position, int targetPosition) {
+                if (mEventCallback != null && mEventCallback.getHolder() != null) {
+                    mEventCallback.getHolder().progressSeek.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void prePlayingItemPositionChange(Message utilMsg) {
+
+            }
+        });
+
     }
 
     private class PlayerListAdapter extends RecyclerView.Adapter<PlayerListAdapter.PlayerViewHolder>{
@@ -179,7 +198,8 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            mXibaListPlayUtil.startFullScreen(url, position, holder.container, mEventCallback);
+            mFScreenEventCallback.setHolder(holder);
+            mXibaListPlayUtil.startFullScreen(url, position, holder.container, mEventCallback, mFScreenEventCallback);
             mEventCallback.setHolder(holder);
         }
     }
@@ -499,22 +519,22 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         public void onPlayerError(int what, int extra) {
 
         }
-
-        @Override
-        public ViewGroup onEnterFullScreen() {
-            ViewGroup contentView = (ViewGroup) RecyclerViewDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
-
-            fullScreenContainer = (ViewGroup) getLayoutInflater()
-                    .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
-
-            initFullScreenUI(holder);
-            return fullScreenContainer;
-        }
-
-        @Override
-        public void onQuitFullScreen() {
-            releaseFullScreenUI();
-        }
+//
+//        @Override
+//        public ViewGroup onEnterFullScreen() {
+//            ViewGroup contentView = (ViewGroup) RecyclerViewDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
+//
+//            fullScreenContainer = (ViewGroup) getLayoutInflater()
+//                    .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
+//
+//            initFullScreenUI(holder);
+//            return fullScreenContainer;
+//        }
+//
+//        @Override
+//        public void onQuitFullScreen() {
+//            releaseFullScreenUI();
+//        }
 
         @Override
         public void onEnterTinyScreen() {
@@ -554,6 +574,34 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         @Override
         public void onStartLoading() {
 
+        }
+    }
+
+    private class ListFullScreenEventCallback implements XibaFullScreenEventCallback {
+        private PlayerListAdapter.PlayerViewHolder holder;
+
+        public void setHolder(PlayerListAdapter.PlayerViewHolder holder) {
+            this.holder = holder;
+        }
+
+        public PlayerListAdapter.PlayerViewHolder getHolder(){
+            return holder;
+        }
+
+        @Override
+        public ViewGroup onEnterFullScreen() {
+            ViewGroup contentView = (ViewGroup) RecyclerViewDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
+
+            fullScreenContainer = (ViewGroup) getLayoutInflater()
+                    .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
+
+            initFullScreenUI(holder);
+            return fullScreenContainer;
+        }
+
+        @Override
+        public void onQuitFullScreen() {
+            releaseFullScreenUI();
         }
     }
 

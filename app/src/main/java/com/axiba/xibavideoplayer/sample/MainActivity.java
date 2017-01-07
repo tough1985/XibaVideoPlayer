@@ -1,22 +1,12 @@
 package com.axiba.xibavideoplayer.sample;
 
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.SurfaceTexture;
-import android.media.AudioManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 
-import java.io.IOException;
-import java.util.HashMap;
-
-import tv.danmaku.ijk.media.player.IMediaPlayer;
-import tv.danmaku.ijk.media.player.IjkMediaPlayer;
+import com.axiba.xibavideoplayer.sample.viewPagerDemo.ViewPagerDemoActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -27,6 +17,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button orientationBN;
     private Button listBN;
     private Button recyclerviewDemoBN;
+    private Button viewpagerDemoBN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +29,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         orientationBN = (Button) findViewById(R.id.orientation_demo_BN);
         listBN = (Button) findViewById(R.id.list_demo_BN);
         recyclerviewDemoBN = (Button) findViewById(R.id.recyclerview_demo_BN);
+        viewpagerDemoBN = (Button) findViewById(R.id.viewpager_demo_BN);
 
         ijkDemoBN.setOnClickListener(this);
         xibaSimpleDemoBN.setOnClickListener(this);
         orientationBN.setOnClickListener(this);
         listBN.setOnClickListener(this);
         recyclerviewDemoBN.setOnClickListener(this);
+        viewpagerDemoBN.setOnClickListener(this);
     }
 
 
@@ -67,6 +60,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.recyclerview_demo_BN:
                 target = RecyclerViewDemoActivity.class;
                 break;
+            case R.id.viewpager_demo_BN:
+                target = ViewPagerDemoActivity.class;
+                break;
+
         }
         startActivity(new Intent(this, target));
     }

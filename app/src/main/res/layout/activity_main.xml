@@ -40,4 +40,9 @@
         android:layout_height="wrap_content"
         android:text="RecyclerView Demo"/>
 
+    <Button
+        android:id="@+id/viewpager_demo_BN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ViewPager Demo"/>
 </LinearLayout>

@@ -76,15 +76,15 @@ public interface XibaVideoPlayerEventCallback {
      */
     void onPlayerError(int what, int extra);
 
-    /**
-     * 进入全屏回调
-     */
-    ViewGroup onEnterFullScreen();
-
-    /**
-     * 退出全屏回调
-     */
-    void onQuitFullScreen();
+//    /**
+//     * 进入全屏回调
+//     */
+//    ViewGroup onEnterFullScreen();
+//
+//    /**
+//     * 退出全屏回调
+//     */
+//    void onQuitFullScreen();
 
     /**
      * 进入小屏回调

@@ -36,6 +36,9 @@
 
         <activity android:name=".RecyclerViewDemoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity android:name=".viewPagerDemo.ViewPagerDemoActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
     </application>
 
 </manifest>

@@ -2,14 +2,10 @@ package com.axiba.xibavideoplayer.sample;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -18,8 +14,8 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.axiba.xibavideoplayer.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
@@ -27,7 +23,7 @@ import com.axiba.xibavideoplayer.utils.XibaUtil;
 /**
  * Created by xiba on 2016/11/26.
  */
-public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEventCallback{
+public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEventCallback, XibaFullScreenEventCallback{
 
     public static final String TAG = SimpleDemoActivity.class.getSimpleName();
 
@@ -102,6 +98,8 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         xibaVP.setUp(url, 0, new Object[]{});
         xibaVP.setEventCallback(this);
         xibaVP.setAutoRotate(true);
+
+        xibaVP.setFullScreenEventCallback(this);
 
         //初始化监听
         mStartButtonListener = new StartButtonListener();
@@ -407,7 +405,6 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
             loadingPB.setVisibility(View.VISIBLE);
         }
     }
-
     //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --XibaVideoPlayerEventCallback methods end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 
@@ -477,8 +474,8 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
             xibaVP.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             xibaVP.setAutoRotate(false);
-            xibaVP.setFullScreenVerticalFeature(XibaVideoPlayer.SCREEN_VERTICAL_LEFT_BRIGHTNESS);
-            xibaVP.setFullScreenHorizontalFeature(XibaVideoPlayer.SCREEN_HORIZONTAL_CHANGE_POSITION);
+            xibaVP.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
+            xibaVP.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
         }
     }
 
@@ -513,23 +510,23 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
         @Override
         public void onClick(View v) {
-            int feature = XibaVideoPlayer.SCREEN_VERTICAL_NONE;
+            int feature = XibaVideoPlayer.SLIDING_VERTICAL_NONE;
 
             switch (v.getId()) {
                 case R.id.demo_vertical_feature_none:
-                    feature = XibaVideoPlayer.SCREEN_VERTICAL_NONE;
+                    feature = XibaVideoPlayer.SLIDING_VERTICAL_NONE;
                     break;
                 case R.id.demo_vertical_feature_only_brightness:
-                    feature = XibaVideoPlayer.SCREEN_VERTICAL_ONLY_BRIGHTNESS;
+                    feature = XibaVideoPlayer.SLIDING_VERTICAL_ONLY_BRIGHTNESS;
                     break;
                 case R.id.demo_vertical_feature_only_volume:
-                    feature = XibaVideoPlayer.SCREEN_VERTICAL_ONLY_VOLUME;
+                    feature = XibaVideoPlayer.SLIDING_VERTICAL_ONLY_VOLUME;
                     break;
                 case R.id.demo_vertical_feature_left_brightness:
-                    feature = XibaVideoPlayer.SCREEN_VERTICAL_LEFT_BRIGHTNESS;
+                    feature = XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS;
                     break;
                 case R.id.demo_vertical_feature_left_volume:
-                    feature = XibaVideoPlayer.SCREEN_VERTICAL_LEFT_VOLUME;
+                    feature = XibaVideoPlayer.SLIDING_VERTICAL_LEFT_VOLUME;
                     break;
             }
 
@@ -541,14 +538,14 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
         @Override
         public void onClick(View v) {
-            int feature = XibaVideoPlayer.SCREEN_HORIZONTAL_NONE;
+            int feature = XibaVideoPlayer.SLIDING_HORIZONTAL_NONE;
 
             switch (v.getId()) {
                 case R.id.demo_horizontal_feature_none:
-                    feature = XibaVideoPlayer.SCREEN_HORIZONTAL_NONE;
+                    feature = XibaVideoPlayer.SLIDING_HORIZONTAL_NONE;
                     break;
                 case R.id.demo_horizontal_feature_change_position:
-                    feature = XibaVideoPlayer.SCREEN_HORIZONTAL_CHANGE_POSITION;
+                    feature = XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION;
                     break;
             }
 
