@@ -571,10 +571,10 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             }
         }
 
-//        @Override
-//        public void onStartLoading() {
-//
-//        }
+        @Override
+        public void onStartLoading() {
+
+        }
     }
 
     private class ListFullScreenEventCallback implements XibaFullScreenEventCallback {

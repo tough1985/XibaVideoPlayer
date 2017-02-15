@@ -97,6 +97,11 @@ public class ListDemoActivity extends AppCompatActivity {
                 if (eventCallback != null && eventCallback.getHolder() != null) {
                     eventCallback.getHolder().progressSeek.setEnabled(false);
 
+                    //如果loading正在显示，在这里隐藏
+                    if (eventCallback.getHolder().loadingPB.getVisibility() == View.VISIBLE) {
+                        eventCallback.getHolder().loadingPB.setVisibility(View.GONE);
+                    }
+
                     eventCallback.changeHolder();
                 }
             }
@@ -518,6 +523,11 @@ public class ListDemoActivity extends AppCompatActivity {
             if (mUtilMsg != null) {
                 holder.progressSeek.setEnabled(false);
 
+                //如果loading正在显示，在这里隐藏
+                if (holder.loadingPB.getVisibility() == View.VISIBLE) {
+                    holder.loadingPB.setVisibility(View.GONE);
+                }
+
                 //在这里解除对Holder的绑定，否则loading会出现在上一个Item中
                 eventCallback.changeHolder();
 
@@ -642,16 +652,16 @@ public class ListDemoActivity extends AppCompatActivity {
             }
         }
 
-//        @Override
-//        public void onStartLoading() {
-////            if (!isBinding) {
-////                return;
-////            }
-//            Log.e(TAG, "onStartLoading");
-//            if (holder != null && holder.loadingPB.getVisibility() != View.VISIBLE) {
-//                holder.loadingPB.setVisibility(View.VISIBLE);
+        @Override
+        public void onStartLoading() {
+//            if (!isBinding) {
+//                return;
 //            }
-//        }
+            Log.e(TAG, "onStartLoading");
+            if (holder != null && holder.loadingPB.getVisibility() != View.VISIBLE) {
+                holder.loadingPB.setVisibility(View.VISIBLE);
+            }
+        }
 
     }
 

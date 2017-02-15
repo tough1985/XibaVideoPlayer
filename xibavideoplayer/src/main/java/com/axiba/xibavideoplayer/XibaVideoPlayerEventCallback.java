@@ -111,11 +111,11 @@ public interface XibaVideoPlayerEventCallback {
      */
     void onTouchLockedScreen();
 
-//    /**
-//     * 播放停止，播放器正在缓冲
-//     * 或
-//     * 点击播放按钮，但是服务器还没有返回数据
-//     */
-//    void onStartLoading();
+    /**
+     * 播放停止，播放器正在缓冲
+     * 或
+     * 点击播放按钮，但是服务器还没有返回数据
+     */
+    void onStartLoading();
 
 }

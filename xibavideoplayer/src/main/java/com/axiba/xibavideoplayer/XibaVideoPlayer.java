@@ -1858,18 +1858,18 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //                Log.e(TAG, "mCurrentBufferPercentage=" + mCurrentBufferPercentage);
                 if (mLastPosition == position && mIsBuffering) {
 
-//                    if (!mIsLoading) {
-//                        mIsLoading = true;
-//                        //showLoading
-//                        Log.e(TAG, "Player is Loading");
-//
-//                        eventCallback.onStartLoading();
-//                    }
+                    if (!mIsLoading) {
+                        mIsLoading = true;
+                        //showLoading
+                        Log.e(TAG, "Player is Loading");
+
+                        eventCallback.onStartLoading();
+                    }
 
                 } else {
-//                    if (mIsLoading) {
-//                        mIsLoading = false;
-//                    }
+                    if (mIsLoading) {
+                        mIsLoading = false;
+                    }
                     eventCallback.onPlayerProgressUpdate(progress, mCurrentBufferPercentage, position, duration);
                 }
             }
