@@ -285,9 +285,11 @@ public class ListDemoActivity extends AppCompatActivity {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
 
+            eventCallback.bindHolder(holder, position);
+
             mXibaListPlayUtil.seekTo(url, position, holder.container,
                     eventCallback, holder.progressSeek.getProgress(), holder.progressSeek.getMax());
-            eventCallback.bindHolder(holder, position);
+
             isTrackingTouchSeekBar = false;
         }
     }

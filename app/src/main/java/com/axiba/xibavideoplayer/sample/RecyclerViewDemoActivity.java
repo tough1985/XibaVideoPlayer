@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -66,6 +67,8 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
     private TextView fScreenPositionChangingInfoTV;
     private RelativeLayout fScreenBottomContainerRL;
 
+    private Message mUtilMsg;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,19 +89,27 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         mEventCallback = new ListEventCallback();
         mFScreenEventCallback = new ListFullScreenEventCallback();
 
-//        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
-//            @Override
-//            public void prePlayingItemPositionChange(int position, int targetPosition) {
-//                if (mEventCallback != null && mEventCallback.getHolder() != null) {
-//                    mEventCallback.getHolder().progressSeek.setEnabled(false);
-//                }
-//            }
-//
-//            @Override
-//            public void prePlayingItemPositionChange(Message utilMsg) {
-//
-//            }
-//        });
+        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+            @Override
+            public void prePlayingItemPositionChange(Message utilMsg) {
+                mUtilMsg = utilMsg;
+
+            }
+
+            @Override
+            public void prePlayingItemChangeOnPause() {
+                if (mEventCallback != null && mEventCallback.getHolder() != null) {
+                    mEventCallback.getHolder().progressSeek.setEnabled(false);
+
+                    //如果loading正在显示，在这里隐藏
+                    if (mEventCallback.getHolder().loadingPB.getVisibility() == View.VISIBLE) {
+                        mEventCallback.getHolder().loadingPB.setVisibility(View.GONE);
+                    }
+
+                    mEventCallback.changeHolder();
+                }
+            }
+        });
 
     }
 
@@ -145,6 +156,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             TextView totalTimeTV;
             SeekBar progressSeek;
             Button tinyscreenBN;
+            ProgressBar loadingPB;
 
             public PlayerViewHolder(View itemView) {
                 super(itemView);
@@ -156,6 +168,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
                 totalTimeTV = (TextView) itemView.findViewById(R.id.player_list_item_total_time);
                 progressSeek = (SeekBar) itemView.findViewById(R.id.player_list_item_demo_seek);
                 tinyscreenBN = (Button) itemView.findViewById(R.id.player_list_item_tinyscreen);
+                loadingPB = (ProgressBar) itemView.findViewById(R.id.player_list_item_loading_PB);
             }
         }
     }
@@ -177,8 +190,10 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
 
+            mEventCallback.bindHolder(holder, position);
+
             mXibaListPlayUtil.togglePlay(url, position, holder.container, mEventCallback);
-            mEventCallback.setHolder(holder);
+//            mEventCallback.setHolder(holder);
         }
     }
 
@@ -199,8 +214,10 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             mFScreenEventCallback.setHolder(holder);
+            mEventCallback.bindHolder(holder, position);
+
             mXibaListPlayUtil.startFullScreen(url, position, holder.container, mEventCallback, mFScreenEventCallback);
-            mEventCallback.setHolder(holder);
+//            mEventCallback.setHolder(holder);
         }
     }
 
@@ -221,8 +238,10 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
 
+            mEventCallback.bindHolder(holder, position);
+
             mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, mEventCallback, new Point(500, 300), 600, 1400, true);
-            mEventCallback.setHolder(holder);
+//            mEventCallback.setHolder(holder);
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 holder.tinyscreenBN.setText("返回");
@@ -259,9 +278,11 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
 
+            mEventCallback.bindHolder(holder, position);
+
             mXibaListPlayUtil.seekTo(url, position, holder.container,
                     mEventCallback, holder.progressSeek.getProgress(), holder.progressSeek.getMax());
-            mEventCallback.setHolder(holder);
+//            mEventCallback.setHolder(holder);
             isTrackingTouchSeekBar = false;
         }
     }
@@ -308,6 +329,10 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             holder.progressSeek.setProgress(0);
             holder.progressSeek.setEnabled(false);
             holder.tinyscreenBN.setText("小屏");
+        }
+
+        if (mXibaListPlayUtil.getPlayingPosition() == position) {
+            mEventCallback.bindHolder(holder, position);
         }
     }
 
@@ -404,8 +429,26 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
         private PlayerListAdapter.PlayerViewHolder holder;
 
-        public void setHolder(PlayerListAdapter.PlayerViewHolder holder) {
-            this.holder = holder;
+        private PlayerListAdapter.PlayerViewHolder nextHolder;
+
+//        public void setHolder(PlayerListAdapter.PlayerViewHolder holder) {
+//            this.holder = holder;
+//        }
+
+        public void bindHolder(PlayerListAdapter.PlayerViewHolder holder, int position){
+            if (this.holder == null || mXibaListPlayUtil.getPlayingPosition() == position) {
+                this.holder = holder;
+            } else {
+                this.nextHolder = holder;
+            }
+        }
+
+        public void changeHolder(){
+            if (nextHolder != null) {
+                holder = nextHolder;
+
+                nextHolder = null;
+            }
         }
 
         public PlayerListAdapter.PlayerViewHolder getHolder(){
@@ -436,6 +479,11 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
                 holder.progressSeek.setEnabled(true);
             }
 
+            //如果loading正在显示，在这里隐藏
+            if (holder.loadingPB.getVisibility() == View.VISIBLE) {
+                holder.loadingPB.setVisibility(View.GONE);
+            }
+
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
                 fScreenCurrentTimeTV.setText(XibaUtil.stringForTime(currentTime));
                 fScreenTotalTimeTV.setText(XibaUtil.stringForTime(totalTime));
@@ -454,6 +502,22 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
                 fScreenPlayBN.setText("播放");
+            }
+
+            if (mUtilMsg != null) {
+                holder.progressSeek.setEnabled(false);
+
+                //如果loading正在显示，在这里隐藏
+                if (holder.loadingPB.getVisibility() == View.VISIBLE) {
+                    holder.loadingPB.setVisibility(View.GONE);
+                }
+
+                //在这里解除对Holder的绑定，否则loading会出现在上一个Item中
+                mEventCallback.changeHolder();
+
+                mUtilMsg.sendToTarget();
+
+                mUtilMsg = null;
             }
         }
 
@@ -573,7 +637,9 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
         @Override
         public void onStartLoading() {
-
+            if (holder != null && holder.loadingPB.getVisibility() != View.VISIBLE) {
+                holder.loadingPB.setVisibility(View.VISIBLE);
+            }
         }
     }
 
