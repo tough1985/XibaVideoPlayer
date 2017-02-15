@@ -72,8 +72,6 @@ public class ListDemoActivity extends AppCompatActivity {
     private TextView fScreenPositionChangingInfoTV;
     private RelativeLayout fScreenBottomContainerRL;
 
-    private boolean isChangingPlayingItem = false;
-
     private Message mUtilMsg;
 
     @Override
@@ -87,22 +85,20 @@ public class ListDemoActivity extends AppCompatActivity {
 
         mXibaListPlayUtil = new XibaListPlayUtil(this);
         mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
-            @Override
-            public void prePlayingItemPositionChange(int position, int targetPosition) {
-//                if (eventCallback != null && eventCallback.getHolder() != null) {
-//                    eventCallback.getHolder().progressSeek.setEnabled(false);
-//                }
-//
-//                //在这里解除对Holder的绑定，否则loading会出现在上一个Item中
-//                eventCallback.unbindHolder();
-//                Log.e(TAG, "prePlayingItemPositionChange");
-
-                isChangingPlayingItem = true;
-            }
 
             @Override
             public void prePlayingItemPositionChange(Message utilMsg) {
                 mUtilMsg = utilMsg;
+
+            }
+
+            @Override
+            public void prePlayingItemChangeOnPause() {
+                if (eventCallback != null && eventCallback.getHolder() != null) {
+                    eventCallback.getHolder().progressSeek.setEnabled(false);
+
+                    eventCallback.changeHolder();
+                }
             }
         });
 
@@ -203,8 +199,8 @@ public class ListDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
 
+            eventCallback.bindHolder(holder, position);
             mXibaListPlayUtil.togglePlay(url, position, holder.container, eventCallback);
-            eventCallback.bindHolder(holder);
         }
     }
 
@@ -226,7 +222,7 @@ public class ListDemoActivity extends AppCompatActivity {
         public void onClick(View v) {
             mFScreenEventCallback.setHolder(holder);
             mXibaListPlayUtil.startFullScreen(url, position, holder.container, eventCallback, mFScreenEventCallback);
-            eventCallback.bindHolder(holder);
+            eventCallback.bindHolder(holder, position);
         }
     }
 
@@ -248,7 +244,7 @@ public class ListDemoActivity extends AppCompatActivity {
         public void onClick(View v) {
 
             mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, eventCallback, new Point(500, 300), 600, 1400, true);
-            eventCallback.bindHolder(holder);
+            eventCallback.bindHolder(holder, position);
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 holder.tinyscreenBN.setText("返回");
@@ -286,7 +282,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
             mXibaListPlayUtil.seekTo(url, position, holder.container,
                     eventCallback, holder.progressSeek.getProgress(), holder.progressSeek.getMax());
-            eventCallback.bindHolder(holder);
+            eventCallback.bindHolder(holder, position);
             isTrackingTouchSeekBar = false;
         }
     }
@@ -315,7 +311,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
             holder.progressSeek.setProgress(progress);
 
-            if (playerStateInfo.getPosition() == position) {
+            if (mXibaListPlayUtil.getPlayingPosition() == position) {
                 holder.progressSeek.setEnabled(true);
             } else {
                 holder.progressSeek.setEnabled(false);
@@ -339,8 +335,10 @@ public class ListDemoActivity extends AppCompatActivity {
          * 如果eventCallback还没有绑定UI 或者 当前Item就是播放Item
          */
 //        if (mXibaListPlayUtil.getPlayingPosition() == position || !eventCallback.isBinding()) {
-        if (mXibaListPlayUtil.getPlayingPosition() == position || eventCallback.getHolder() == null) {
-            eventCallback.bindHolder(holder);
+        if (mXibaListPlayUtil.getPlayingPosition() == position
+//                || eventCallback.getHolder() == null
+                ) {
+            eventCallback.bindHolder(holder, position);
         }
     }
 
@@ -439,15 +437,12 @@ public class ListDemoActivity extends AppCompatActivity {
     private class ListEventCallback implements XibaVideoPlayerEventCallback{
 
         private ViewHolder holder;
-//        private boolean isBinding = false;
 
         private ViewHolder nextHolder;
 
-        public void bindHolder(ViewHolder holder) {
-//            this.holder = holder;
-//            isBinding = true;
+        public void bindHolder(ViewHolder holder, int position) {
 
-            if (this.holder == null) {
+            if (this.holder == null || mXibaListPlayUtil.getPlayingPosition() == position) {
                 this.holder = holder;
             } else {
                 this.nextHolder = holder;
@@ -458,6 +453,8 @@ public class ListDemoActivity extends AppCompatActivity {
         public void changeHolder(){
             if (nextHolder != null) {
                 holder = nextHolder;
+
+                nextHolder = null;
             }
         }
 
@@ -465,16 +462,10 @@ public class ListDemoActivity extends AppCompatActivity {
             return holder;
         }
 
-//        public boolean isBinding(){
-//            return isBinding;
-//        }
-
         @Override
         public void onPlayerPrepare() {
-            Log.e(TAG, "onPlayerPrepare");
-//            if (!isBinding) {
-//                return;
-//            }
+//            Log.e(TAG, "onPlayerPrepare");
+
             holder.startBN.setText("暂停");
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
@@ -484,10 +475,6 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onPlayerProgressUpdate(int progress, int secProgress, long currentTime, long totalTime) {
-
-//            if (!isBinding) {
-//                return;
-//            }
 
             holder.currentTimeTV.setText(XibaUtil.stringForTime(currentTime));
             holder.totalTimeTV.setText(XibaUtil.stringForTime(totalTime));
@@ -521,18 +508,12 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onPlayerPause() {
-            Log.e(TAG, "onPlayerPause");
-//            if (!isBinding) {
-//                return;
-//            }
+//            Log.e(TAG, "onPlayerPause");
             holder.startBN.setText("播放");
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
                 fScreenPlayBN.setText("播放");
             }
-
-//            if (isChangingPlayingItem) {
-//                isChangingPlayingItem = false;
 
             if (mUtilMsg != null) {
                 holder.progressSeek.setEnabled(false);
@@ -545,16 +526,10 @@ public class ListDemoActivity extends AppCompatActivity {
                 mUtilMsg = null;
             }
 
-//            }
-
-
         }
 
         @Override
         public void onPlayerResume() {
-//            if (!isBinding) {
-//                return;
-//            }
             holder.startBN.setText("暂停");
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
@@ -564,9 +539,6 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onPlayerComplete() {
-//            if (!isBinding) {
-//                return;
-//            }
             holder.startBN.setText("播放");
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
@@ -576,9 +548,6 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onPlayerAutoComplete() {
-//            if (!isBinding) {
-//                return;
-//            }
             holder.startBN.setText("播放");
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
@@ -588,9 +557,6 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration) {
-//            if (!isBinding) {
-//                return;
-//            }
             int progress = (int) (seekTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
             holder.progressSeek.setProgress(progress);
         }
@@ -676,16 +642,16 @@ public class ListDemoActivity extends AppCompatActivity {
             }
         }
 
-        @Override
-        public void onStartLoading() {
-//            if (!isBinding) {
-//                return;
+//        @Override
+//        public void onStartLoading() {
+////            if (!isBinding) {
+////                return;
+////            }
+//            Log.e(TAG, "onStartLoading");
+//            if (holder != null && holder.loadingPB.getVisibility() != View.VISIBLE) {
+//                holder.loadingPB.setVisibility(View.VISIBLE);
 //            }
-            Log.e(TAG, "onStartLoading");
-            if (holder != null && holder.loadingPB.getVisibility() != View.VISIBLE) {
-                holder.loadingPB.setVisibility(View.VISIBLE);
-            }
-        }
+//        }
 
     }
 

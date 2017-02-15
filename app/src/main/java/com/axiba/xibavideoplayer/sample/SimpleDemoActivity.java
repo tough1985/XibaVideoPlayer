@@ -399,12 +399,12 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         toggleShowHideLockBN();
     }
 
-    @Override
-    public void onStartLoading() {
-        if (loadingPB.getVisibility() != View.VISIBLE) {
-            loadingPB.setVisibility(View.VISIBLE);
-        }
-    }
+//    @Override
+//    public void onStartLoading() {
+//        if (loadingPB.getVisibility() != View.VISIBLE) {
+//            loadingPB.setVisibility(View.VISIBLE);
+//        }
+//    }
     //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --XibaVideoPlayerEventCallback methods end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 

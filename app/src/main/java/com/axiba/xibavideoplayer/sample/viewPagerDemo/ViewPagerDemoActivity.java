@@ -77,17 +77,17 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
         mFScreenCallback = new PlayerFullScreenEventCallback();
 
         mXibaListPlayUtil = new XibaListPlayUtil(this);
-        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
-            @Override
-            public void prePlayingItemPositionChange(int position, int targetPosition) {
-                eventCallback.unbindPlayerUI();
-            }
-
-            @Override
-            public void prePlayingItemPositionChange(Message utilMsg) {
-
-            }
-        });
+//        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+//            @Override
+//            public void prePlayingItemPositionChange(int position, int targetPosition) {
+//                eventCallback.unbindPlayerUI();
+//            }
+//
+//            @Override
+//            public void prePlayingItemPositionChange(Message utilMsg) {
+//
+//            }
+//        });
 
 
     }

@@ -86,19 +86,19 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         mEventCallback = new ListEventCallback();
         mFScreenEventCallback = new ListFullScreenEventCallback();
 
-        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
-            @Override
-            public void prePlayingItemPositionChange(int position, int targetPosition) {
-                if (mEventCallback != null && mEventCallback.getHolder() != null) {
-                    mEventCallback.getHolder().progressSeek.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void prePlayingItemPositionChange(Message utilMsg) {
-
-            }
-        });
+//        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+//            @Override
+//            public void prePlayingItemPositionChange(int position, int targetPosition) {
+//                if (mEventCallback != null && mEventCallback.getHolder() != null) {
+//                    mEventCallback.getHolder().progressSeek.setEnabled(false);
+//                }
+//            }
+//
+//            @Override
+//            public void prePlayingItemPositionChange(Message utilMsg) {
+//
+//            }
+//        });
 
     }
 
@@ -571,10 +571,10 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             }
         }
 
-        @Override
-        public void onStartLoading() {
-
-        }
+//        @Override
+//        public void onStartLoading() {
+//
+//        }
     }
 
     private class ListFullScreenEventCallback implements XibaFullScreenEventCallback {

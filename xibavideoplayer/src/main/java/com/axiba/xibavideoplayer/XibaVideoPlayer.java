@@ -438,10 +438,10 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
         startProgressTimer();
 
         //showLoading
-        if (eventCallback != null && !mIsLoading) {
-            mIsLoading = true;
-            eventCallback.onStartLoading();
-        }
+//        if (eventCallback != null && !mIsLoading) {
+//            mIsLoading = true;
+//            eventCallback.onStartLoading();
+//        }
     }
 
     /**
@@ -542,13 +542,13 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //                resetProgressAndTime();
                 break;
             case STATE_PLAYING:
-            case STATE_PAUSE:
+//            case STATE_PAUSE:
             case STATE_PLAYING_BUFFERING_START:
                 startProgressTimer();
                 //屏幕常亮
                 ((Activity) getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 break;
-//            case STATE_PAUSE:
+            case STATE_PAUSE:
             case STATE_COMPLETE:
             case STATE_AUTO_COMPLETE:
                 cancelProgressTimer();
@@ -1858,18 +1858,18 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //                Log.e(TAG, "mCurrentBufferPercentage=" + mCurrentBufferPercentage);
                 if (mLastPosition == position && mIsBuffering) {
 
-                    if (!mIsLoading) {
-                        mIsLoading = true;
-                        //showLoading
-                        Log.e(TAG, "Player is Loading");
-
-                        eventCallback.onStartLoading();
-                    }
+//                    if (!mIsLoading) {
+//                        mIsLoading = true;
+//                        //showLoading
+//                        Log.e(TAG, "Player is Loading");
+//
+//                        eventCallback.onStartLoading();
+//                    }
 
                 } else {
-                    if (mIsLoading) {
-                        mIsLoading = false;
-                    }
+//                    if (mIsLoading) {
+//                        mIsLoading = false;
+//                    }
                     eventCallback.onPlayerProgressUpdate(progress, mCurrentBufferPercentage, position, duration);
                 }
             }

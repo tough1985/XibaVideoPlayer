@@ -29,11 +29,19 @@ public class XibaListPlayUtil {
     public static final String PLAYER_TAG_ITEM_CONTAINER = "itemContainer";  //父容器是itemContainer
     public static final String PLAYER_TAG_CONTENT_VIEW = "contentView";      //父容器是ContentView
 
+    private static final String KEY_ITEM_CONTAINER = "itemContainer";
+    private static final String KEY_EVENT_CALLBACK = "eventCallback";
+    private static final String KEY_POSITION = "position";
+    private static final String KEY_URL = "url";
+    private static final String KEY_LAST_STATE = "lastState";
+
+    private static final int MSG_START_PLAY = 0;
+
     private XibaVideoPlayer mXibaVideoPlayer;
 
     private int mPlayingPosition = -1;  //当前正在播放的item索引
 
-    private SparseArray<PlayerStateInfo> stateInfoList;
+    private SparseArray<PlayerStateInfo> stateInfoList;     //已经播放过的视频信息列表
 
     private Context context;
 
@@ -42,8 +50,8 @@ public class XibaListPlayUtil {
 
     //切换播放条目接口
     public interface PlayingItemPositionChange{
-        void prePlayingItemPositionChange(int position, int targetPosition);
-        void prePlayingItemPositionChange(Message utilMsg);
+        void prePlayingItemPositionChange(Message utilMsg);     //正常播放时，切换播放条目
+        void prePlayingItemChangeOnPause();     //当播放器状态为暂停时，切换播放条目
     }
 
     private PlayingItemPositionChange playingItemPositionChangeImpl;
@@ -56,41 +64,29 @@ public class XibaListPlayUtil {
         this.playingItemPositionChangeImpl = playingItemPositionChangeImpl;
     }
 
-//    private HandlerThread mHandlerThread;
     private UtilHandler mUtilHandler;
-//    private Handler mMainHandler;
 
+    /**
+     * 此Handler用于切换播放条目的过程中，
+     * 原来的播放控件完成UI逻辑处理
+     * 并将焦点切换到目标播放位置的UI之后，发送消息到此handler，进行目标文件的播放
+     */
     private class UtilHandler extends Handler{
 
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case 0:
-
+                case MSG_START_PLAY:
 
                     if (msg != null) {
                         Map<String, Object> msgObj = (Map<String, Object>) msg.obj;
-                        ViewGroup itemContainer = (ViewGroup) msgObj.get("itemContainer");
-                        XibaVideoPlayerEventCallback eventCallback = (XibaVideoPlayerEventCallback) msgObj.get("eventCallback");
-                        int position = (int) msgObj.get("position");
-                        String url = (String) msgObj.get("url");
-                        int lastState = (int) msgObj.get("lastState");
+                        ViewGroup itemContainer = (ViewGroup) msgObj.get(KEY_ITEM_CONTAINER);
+                        XibaVideoPlayerEventCallback eventCallback = (XibaVideoPlayerEventCallback) msgObj.get(KEY_EVENT_CALLBACK);
+                        int position = (int) msgObj.get(KEY_POSITION);
+                        String url = (String) msgObj.get(KEY_URL);
+                        int lastState = (int) msgObj.get(KEY_LAST_STATE);
 
-                        removePlayerFromParent(lastState);
-                        //设置播放索引为当前索引
-                        mPlayingPosition = position;
-
-                        //如果有保存播放信息，恢复上次播放位置
-                        PlayerStateInfo playerStateInfo = stateInfoList.get(position);
-                        if (playerStateInfo != null) {
-                            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
-                        } else {
-                            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
-                        }
-
-                        addToListItem(itemContainer, eventCallback);    //添加到ItemContainer
-
-                        mXibaVideoPlayer.togglePlayPause();
+                        startPlay(url, position, itemContainer, eventCallback, lastState);
                     }
 
                     break;
@@ -107,11 +103,7 @@ public class XibaListPlayUtil {
         mXibaVideoPlayer = new XibaVideoPlayer(context);
         stateInfoList = new SparseArray<>();
 
-//        mHandlerThread = new HandlerThread(TAG);
-//
         mUtilHandler = new UtilHandler();
-//
-//        mMainHandler = new Handler(context.getMainLooper());
     }
 
     /**
@@ -190,15 +182,24 @@ public class XibaListPlayUtil {
         }
     }
 
+    /**
+     * 跳转快进
+     * @param url   播放地址
+     * @param position  在列表中的位置
+     * @param itemContainer 播放器容器
+     * @param eventCallback 回调事件接口
+     * @param progress
+     * @param maxProgress
+     */
     public void seekTo(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
                        int progress, int maxProgress){
         if (mPlayingPosition != position) {
             PlayerStateInfo stateInfo = stateInfoList.get(position);
             if (stateInfo != null) {
+                //根据进度百分比，得出目标位置
                 long seekPosition = stateInfo.getDuration() * progress / maxProgress;
                 stateInfo.setPosition(seekPosition);
             }
-
 
             togglePlay(url, position, itemContainer, eventCallback);
         } else {
@@ -270,10 +271,12 @@ public class XibaListPlayUtil {
 
         if (mPlayingPosition != position) {
 
+            //如果播放器在小屏播放状态，先退出小屏状态
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 quitTinyScreen(itemContainer);
             }
 
+            //如果播放器在全屏播放状态，先退出全屏状态
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
                 quitFullScreen();
             }
@@ -294,59 +297,79 @@ public class XibaListPlayUtil {
 
                 if (playingItemPositionChangeImpl != null) {
 
+                    //由于屏幕滑动的过程中，会将eventCallback设成null，导致无法调用暂停回调
+                    //因此，这里需要设置eventCallback
+                    mXibaVideoPlayer.setEventCallback(eventCallback);
 
+                    //创建handler消息
                     Map<String, Object> msgObj = new HashMap<>();
-                    msgObj.put("itemContainer", itemContainer);
-                    msgObj.put("eventCallback", eventCallback);
-                    msgObj.put("position", position);
-                    msgObj.put("url", url);
-                    msgObj.put("lastState", lastState);
+                    msgObj.put(KEY_ITEM_CONTAINER, itemContainer);
+                    msgObj.put(KEY_EVENT_CALLBACK, eventCallback);
+                    msgObj.put(KEY_POSITION, position);
+                    msgObj.put(KEY_URL, url);
+                    msgObj.put(KEY_LAST_STATE, lastState);
 
+                    Message utilMsg = mUtilHandler.obtainMessage(MSG_START_PLAY, msgObj);
 
-                    Message utilMsg = mUtilHandler.obtainMessage(0, msgObj);
+//                    //调用播放位置变更接口
+//                    playingItemPositionChangeImpl.prePlayingItemPositionChange(utilMsg);
 
-                    playingItemPositionChangeImpl.prePlayingItemPositionChange(utilMsg);
+                    //如果播放器为播放状态，暂停播放器
+                    if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
+                        //调用播放位置变更接口
+                        playingItemPositionChangeImpl.prePlayingItemPositionChange(utilMsg);
 
-//                    playingItemPositionChangeImpl.prePlayingItemPositionChange(mPlayingPosition, position);
-                }
+                        mXibaVideoPlayer.pausePlayer();
+                    } else if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
 
-                //如果播放器为播放状态，暂停播放器
-                if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
-                        || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
-                    mXibaVideoPlayer.pausePlayer();
-                }
+                        playingItemPositionChangeImpl.prePlayingItemChangeOnPause();
+                        startPlay(url, position, itemContainer, eventCallback, lastState);
+                    }
 
-//                removePlayerFromParent(lastState);
-            } else {
-
-                //设置播放索引为当前索引
-                mPlayingPosition = position;
-
-                //如果有保存播放信息，恢复上次播放位置
-                PlayerStateInfo playerStateInfo = stateInfoList.get(position);
-                if (playerStateInfo != null) {
-                    mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
                 } else {
-                    mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
+                    //如果播放器为播放状态，暂停播放器
+                    if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
+                            || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
+                        mXibaVideoPlayer.pausePlayer();
+                    }
+                    startPlay(url, position, itemContainer, eventCallback, lastState);
                 }
 
-                addToListItem(itemContainer, eventCallback);    //添加到ItemContainer
-
-                mXibaVideoPlayer.togglePlayPause();
-
+            } else {
                 //如果播放器为播放状态，暂停播放器
                 if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
                         || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
                     mXibaVideoPlayer.pausePlayer();
                 }
+                startPlay(url, position, itemContainer, eventCallback, lastState);
             }
-
         }
         else{
 
             mXibaVideoPlayer.togglePlayPause();
         }
 
+    }
+
+    private void startPlay(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback, int lastState){
+
+        //将播放器从当前父容器中移出
+        removePlayerFromParent(lastState);
+
+        //设置播放索引为当前索引
+        mPlayingPosition = position;
+
+        //如果有保存播放信息，恢复上次播放位置
+        PlayerStateInfo playerStateInfo = stateInfoList.get(position);
+        if (playerStateInfo != null) {
+            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
+        } else {
+            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
+        }
+
+        addToListItem(itemContainer, eventCallback);    //添加到目标容器中
+
+        mXibaVideoPlayer.togglePlayPause();     //开始播放
     }
 
     /**
@@ -462,7 +485,9 @@ public class XibaListPlayUtil {
 
         //保存移出时候的状态
         savePlayerInfo();
+
         mXibaVideoPlayer.setEventCallback(null);
+
         ViewGroup parent = (ViewGroup) mXibaVideoPlayer.getParent();
 
         if (parent != null) {

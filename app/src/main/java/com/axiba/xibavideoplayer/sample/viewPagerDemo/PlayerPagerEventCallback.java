@@ -212,14 +212,14 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback {
 
     }
 
-    @Override
-    public void onStartLoading() {
-        if (!isBinding) {
-            return;
-        }
-
-        if (loadingPB.getVisibility() != View.VISIBLE) {
-            loadingPB.setVisibility(View.VISIBLE);
-        }
-    }
+//    @Override
+//    public void onStartLoading() {
+//        if (!isBinding) {
+//            return;
+//        }
+//
+//        if (loadingPB.getVisibility() != View.VISIBLE) {
+//            loadingPB.setVisibility(View.VISIBLE);
+//        }
+//    }
 }
