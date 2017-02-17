@@ -31,10 +31,10 @@
         <activity android:name=".OrientationEventActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
-        <activity android:name=".ListDemoActivity"
+        <activity android:name=".listViewDemo.ListDemoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
-        <activity android:name=".RecyclerViewDemoActivity"
+        <activity android:name=".recyclerViewDemo.RecyclerViewDemoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity android:name=".viewPagerDemo.ViewPagerDemoActivity"

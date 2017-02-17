@@ -1,4 +1,4 @@
-package com.axiba.xibavideoplayer;
+package com.axiba.xibavideoplayer.eventCallback;
 
 import android.view.ViewGroup;
 

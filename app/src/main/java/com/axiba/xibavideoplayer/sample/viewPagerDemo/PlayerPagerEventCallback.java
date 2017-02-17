@@ -1,22 +1,22 @@
 package com.axiba.xibavideoplayer.sample.viewPagerDemo;
 
+import android.os.Message;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.axiba.xibavideoplayer.XibaVideoPlayer;
-import com.axiba.xibavideoplayer.XibaVideoPlayerEventCallback;
+import com.axiba.xibavideoplayer.XibaListPlayUtil;
+import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**
  * Created by xiba on 2016/12/22.
  */
 
-public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback {
+public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback, XibaTinyScreenEventCallback {
 
     private Button play;
     private TextView currentTimeTV;
@@ -26,37 +26,101 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback {
     private Button tinyScreenBN;
     private ProgressBar loadingPB;
 
-    private boolean isBinding = false;
+//    private boolean isBinding = false;
 
     private boolean isTrackingTouchSeekBar = false;
 
-    public void bindingPlayerUI(PlayerFragment playerFragment) {
-        this.play = playerFragment.getPlay();
-        this.currentTimeTV = playerFragment.getCurrentTimeTV();
-        this.totalTimeTV = playerFragment.getTotalTimeTV();
-        this.demoSeek = playerFragment.getDemoSeek();
-        this.fullScreenBN = playerFragment.getFullScreenBN();
-        this.tinyScreenBN = playerFragment.getTinyScreenBN();
-        this.loadingPB = playerFragment.getLoadingPB();
 
-        isBinding = true;
+    private PlayerFragment playerUI;
+
+    private PlayerFragment nextPlayerUI;
+
+    private XibaListPlayUtil mXibaListPlayUtil;
+
+    private Message mUtilMsg;
+
+    public PlayerPagerEventCallback(XibaListPlayUtil mXibaListPlayUtil) {
+        this.mXibaListPlayUtil = mXibaListPlayUtil;
+
+        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+
+            @Override
+            public void prePlayingItemPositionChange(Message utilMsg) {
+                mUtilMsg = utilMsg;
+            }
+
+            @Override
+            public void prePlayingItemChangeOnPause() {
+                if (playerUI != null) {
+                    demoSeek.setEnabled(false);
+
+                    //如果loading正在显示，在这里隐藏
+                    if (loadingPB.getVisibility() == View.VISIBLE) {
+                        loadingPB.setVisibility(View.GONE);
+                    }
+
+                    changePlayerUI();
+                }
+            }
+        });
     }
 
-    public void unbindPlayerUI(){
-        this.play = null;
-        this.currentTimeTV = null;
-        this.totalTimeTV = null;
-        this.demoSeek = null;
-        this.fullScreenBN = null;
-        this.tinyScreenBN = null;
-        this.loadingPB = null;
+    public void bindingPlayerUI(PlayerFragment playerFragment, int position) {
 
-        isBinding = false;
+        if (this.playerUI == null || mXibaListPlayUtil.getPlayingPosition() == position) {
+            this.playerUI = playerFragment;
+            bindingUIItem();
+        } else {
+            this.nextPlayerUI = playerFragment;
+        }
+
+
+//        this.play = playerFragment.getPlay();
+//        this.currentTimeTV = playerFragment.getCurrentTimeTV();
+//        this.totalTimeTV = playerFragment.getTotalTimeTV();
+//        this.demoSeek = playerFragment.getDemoSeek();
+//        this.fullScreenBN = playerFragment.getFullScreenBN();
+//        this.tinyScreenBN = playerFragment.getTinyScreenBN();
+//        this.loadingPB = playerFragment.getLoadingPB();
+
+//        isBinding = true;
     }
 
-    public boolean isBinding() {
-        return isBinding;
+    public void changePlayerUI(){
+
+        if (nextPlayerUI != null) {
+            playerUI = nextPlayerUI;
+            nextPlayerUI = null;
+            bindingUIItem();
+        }
     }
+
+    private void bindingUIItem(){
+        this.play = playerUI.getPlay();
+        this.currentTimeTV = playerUI.getCurrentTimeTV();
+        this.totalTimeTV = playerUI.getTotalTimeTV();
+        this.demoSeek = playerUI.getDemoSeek();
+        this.fullScreenBN = playerUI.getFullScreenBN();
+        this.tinyScreenBN = playerUI.getTinyScreenBN();
+        this.loadingPB = playerUI.getLoadingPB();
+    }
+
+
+//    public void unbindPlayerUI(){
+//        this.play = null;
+//        this.currentTimeTV = null;
+//        this.totalTimeTV = null;
+//        this.demoSeek = null;
+//        this.fullScreenBN = null;
+//        this.tinyScreenBN = null;
+//        this.loadingPB = null;
+//
+////        isBinding = false;
+//    }
+
+//    public boolean isBinding() {
+//        return isBinding;
+//    }
 
     public boolean isTrackingTouchSeekBar() {
         return isTrackingTouchSeekBar;
@@ -68,23 +132,25 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback {
 
     @Override
     public void onPlayerPrepare() {
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
 
         play.setText("暂停");
 
 //        if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
 //            play.setText("暂停");
 //        }
+
+
     }
 
     @Override
     public void onPlayerProgressUpdate(int progress, int secProgress, long currentTime, long totalTime) {
 
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
 
         currentTimeTV.setText(XibaUtil.stringForTime(currentTime));
         totalTimeTV.setText(XibaUtil.stringForTime(totalTime));
@@ -106,42 +172,58 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback {
 
     @Override
     public void onPlayerPause() {
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
 
         play.setText("播放");
+
+        if (mUtilMsg != null) {
+            demoSeek.setEnabled(false);
+
+            //如果loading正在显示，在这里隐藏
+            if (loadingPB.getVisibility() == View.VISIBLE) {
+                loadingPB.setVisibility(View.GONE);
+            }
+
+            //在这里解除对Holder的绑定，否则loading会出现在上一个Item中
+            changePlayerUI();
+
+            mUtilMsg.sendToTarget();
+
+            mUtilMsg = null;
+        }
     }
 
     @Override
     public void onPlayerResume() {
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
         play.setText("暂停");
     }
 
     @Override
     public void onPlayerComplete() {
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
         play.setText("播放");
     }
 
     @Override
     public void onPlayerAutoComplete() {
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
         play.setText("播放");
     }
 
     @Override
     public void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration) {
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
 
         int progress = (int) (seekTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
         demoSeek.setProgress(progress);
@@ -214,9 +296,9 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback {
 
     @Override
     public void onStartLoading() {
-        if (!isBinding) {
-            return;
-        }
+//        if (!isBinding) {
+//            return;
+//        }
 
         if (loadingPB.getVisibility() != View.VISIBLE) {
             loadingPB.setVisibility(View.VISIBLE);

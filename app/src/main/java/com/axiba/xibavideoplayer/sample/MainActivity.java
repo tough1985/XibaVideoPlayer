@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.axiba.xibavideoplayer.sample.listViewDemo.ListDemoActivity;
+import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
 import com.axiba.xibavideoplayer.sample.viewPagerDemo.ViewPagerDemoActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{

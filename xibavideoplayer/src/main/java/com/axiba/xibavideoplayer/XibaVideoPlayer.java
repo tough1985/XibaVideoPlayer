@@ -3,13 +3,8 @@ package com.axiba.xibavideoplayer;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.pm.ActivityInfo;
-import android.content.pm.ApplicationInfo;
-import android.content.res.TypedArray;
-import android.content.res.XmlResourceParser;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Handler;
 import android.content.Context;
 import android.graphics.Point;
@@ -18,11 +13,9 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Parcelable;
 import android.provider.Settings;
-import android.support.annotation.XmlRes;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.Xml;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -34,20 +27,19 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.listener.OnAutoOrientationChangedListener;
 import com.axiba.xibavideoplayer.listener.TinyWindowOnTouchListener;
 import com.axiba.xibavideoplayer.listener.XibaMediaListener;
 import com.axiba.xibavideoplayer.utils.OrientationUtils;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import javax.xml.namespace.NamespaceContext;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
@@ -144,6 +136,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     protected XibaVideoPlayerEventCallback eventCallback;   //播放器事件回调接口
     protected XibaFullScreenEventCallback mFScreenEventCallback;    //全屏相关事件回调接口
+    protected XibaTinyScreenEventCallback mTScreenEventCallback;    //小屏屏相关事件回调接口
 
     private XibaResizeTextureView textureView;              //播放器显示Texture
     private XibaResizeImageView cacheImageView;
@@ -347,6 +340,14 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     public void setFullScreenEventCallback(XibaFullScreenEventCallback fullScreenEventCallback){
         this.mFScreenEventCallback = fullScreenEventCallback;
+    }
+
+    /**
+     * 设置小屏事件相关回调接口
+     * @param tinyScreenEventCallback
+     */
+    public void setTinyScreenEventCallback(XibaTinyScreenEventCallback tinyScreenEventCallback){
+        this.mTScreenEventCallback = tinyScreenEventCallback;
     }
 
     /**
@@ -1342,8 +1343,12 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
             this.setOnTouchListener(new TinyWindowOnTouchListener());
         }
 
-        if (eventCallback != null) {
-            eventCallback.onEnterTinyScreen();  //调用进入小屏回调事件
+//        if (eventCallback != null) {
+//            eventCallback.onEnterTinyScreen();  //调用进入小屏回调事件
+//        }
+
+        if (mTScreenEventCallback != null) {
+            mTScreenEventCallback.onEnterTinyScreen();  //调用进入小屏回调事件
         }
 
         showCacheImageView();   //显示视频截图
@@ -1400,8 +1405,11 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 //        mCurrentScreen = SCREEN_NORMAL;     //设置屏幕类型
         mCurrentScreen = mSetUpScreen;
 
-        if (eventCallback != null) {
-            eventCallback.onQuitTinyScreen();   //调用退出小屏回调事件
+//        if (eventCallback != null) {
+//            eventCallback.onQuitTinyScreen();   //调用退出小屏回调事件
+//        }
+        if (mTScreenEventCallback != null) {
+            mTScreenEventCallback.onQuitTinyScreen();   //调用退出小屏回调事件
         }
 
         showCacheImageView();   //显示视频截图

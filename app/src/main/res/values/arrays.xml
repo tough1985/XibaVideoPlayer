@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--视频地址-->
+    <string-array name="urls">
+        <item>@string/url_0</item>
+        <item>@string/url_1</item>
+        <item>@string/url_2</item>
+        <item>@string/url_3</item>
+        <item>@string/url_4</item>
+        <item>@string/url_5</item>
+        <item>@string/url_6</item>
+        <item>@string/url_7</item>
+        <item>@string/url_8</item>
+        <item>@string/url_9</item>
+    </string-array>
+</resources>

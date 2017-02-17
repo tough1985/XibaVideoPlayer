@@ -1,7 +1,6 @@
 package com.axiba.xibavideoplayer.sample.viewPagerDemo;
 
 import android.os.Bundle;
-import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -17,9 +16,8 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.axiba.xibavideoplayer.XibaFullScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.XibaListPlayUtil;
-import com.axiba.xibavideoplayer.sample.ListDemoActivity;
 import com.axiba.xibavideoplayer.sample.R;
 
 /**
@@ -38,18 +36,7 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
     private PlayerPagerEventCallback  eventCallback;
     private PlayerFullScreenEventCallback mFScreenCallback;
 
-    private String[] urls = {
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=10935&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11528&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11519&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11526&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11525&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11524&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11523&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11522&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11521&editionType=default",
-            "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11520&editionType=default"
-    };
+    private String[] urls;
 
     private ViewGroup fullScreenContainer;
 
@@ -67,27 +54,20 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_viewpager_demo);
 
+        urls = this.getResources().getStringArray(R.array.urls);
+
         mAdapter = new PlayerPagerAdapter(getSupportFragmentManager());
         mPager = (ViewPager) findViewById(R.id.player_list_VP);
 
         mPager.setAdapter(mAdapter);
 
-        eventCallback = new PlayerPagerEventCallback();
+
+        mXibaListPlayUtil = new XibaListPlayUtil(this);
+
+        eventCallback = new PlayerPagerEventCallback(mXibaListPlayUtil);
 
         mFScreenCallback = new PlayerFullScreenEventCallback();
 
-        mXibaListPlayUtil = new XibaListPlayUtil(this);
-//        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
-//            @Override
-//            public void prePlayingItemPositionChange(int position, int targetPosition) {
-//                eventCallback.unbindPlayerUI();
-//            }
-//
-//            @Override
-//            public void prePlayingItemPositionChange(Message utilMsg) {
-//
-//            }
-//        });
 
 
     }

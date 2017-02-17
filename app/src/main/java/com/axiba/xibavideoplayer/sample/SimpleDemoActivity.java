@@ -15,15 +15,16 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.axiba.xibavideoplayer.XibaFullScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
-import com.axiba.xibavideoplayer.XibaVideoPlayerEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**
  * Created by xiba on 2016/11/26.
  */
-public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEventCallback, XibaFullScreenEventCallback{
+public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEventCallback, XibaFullScreenEventCallback, XibaTinyScreenEventCallback{
 
     public static final String TAG = SimpleDemoActivity.class.getSimpleName();
 
@@ -100,6 +101,7 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         xibaVP.setAutoRotate(true);
 
         xibaVP.setFullScreenEventCallback(this);
+        xibaVP.setTinyScreenEventCallback(this);
 
         //初始化监听
         mStartButtonListener = new StartButtonListener();

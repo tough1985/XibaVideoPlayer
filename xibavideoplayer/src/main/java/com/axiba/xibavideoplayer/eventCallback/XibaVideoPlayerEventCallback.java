@@ -1,4 +1,4 @@
-package com.axiba.xibavideoplayer;
+package com.axiba.xibavideoplayer.eventCallback;
 
 import android.graphics.Bitmap;
 import android.view.ViewGroup;
@@ -44,6 +44,11 @@ public interface XibaVideoPlayerEventCallback {
     void onPlayerAutoComplete();
 
     /**
+     * 播放停止，播放器正在缓冲
+     */
+    void onStartLoading();
+
+    /**
      * 进度变化回调
      * @param seekTimePosition
      * @param totalTimeDuration
@@ -86,15 +91,15 @@ public interface XibaVideoPlayerEventCallback {
 //     */
 //    void onQuitFullScreen();
 
-    /**
-     * 进入小屏回调
-     */
-    void onEnterTinyScreen();
-
-    /**
-     * 退出小屏回调
-     */
-    void onQuitTinyScreen();
+//    /**
+//     * 进入小屏回调
+//     */
+//    void onEnterTinyScreen();
+//
+//    /**
+//     * 退出小屏回调
+//     */
+//    void onQuitTinyScreen();
 
     /**
      * 单击屏幕
@@ -111,11 +116,6 @@ public interface XibaVideoPlayerEventCallback {
      */
     void onTouchLockedScreen();
 
-    /**
-     * 播放停止，播放器正在缓冲
-     * 或
-     * 点击播放按钮，但是服务器还没有返回数据
-     */
-    void onStartLoading();
+
 
 }

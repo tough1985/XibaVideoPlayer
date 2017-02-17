@@ -6,13 +6,16 @@ import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Message;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
+
+import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -142,11 +145,27 @@ public class XibaListPlayUtil {
         mXibaVideoPlayer.setFullScreenEventCallback(null);
     }
 
+
+    /**
+     * 进入小屏模式
+     * @param tinyScreenEventCallback
+     * @param size
+     * @param x
+     * @param y
+     * @param canMove
+     */
+    private void startTinyScreen(XibaTinyScreenEventCallback tinyScreenEventCallback, Point size, float x, float y, boolean canMove){
+        mXibaVideoPlayer.setTinyScreenEventCallback(tinyScreenEventCallback);
+        mXibaVideoPlayer.startTinyScreen(size, x, y, canMove);
+        savePlayerInfo();
+    }
+
     /**
      * 退出小屏
      */
-    public void quitTinyScreen(ViewGroup itemContainer){
+    private void quitTinyScreen(ViewGroup itemContainer){
         mXibaVideoPlayer.quitTinyScreen(itemContainer);
+        mXibaVideoPlayer.setTinyScreenEventCallback(null);
         savePlayerInfo();
     }
 
@@ -156,28 +175,31 @@ public class XibaListPlayUtil {
      * @param position  在列表中的位置
      * @param itemContainer 播放器容器
      * @param eventCallback 回调事件接口
+     * @param tinyScreenEventCallback 小屏相关事件接口
      * @param size  小屏的尺寸
      * @param x 小屏x坐标
      * @param y 小屏y坐标
      * @param canMove   小屏是否可移动
      */
-    public void toggleTinyScreen(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
+    public void toggleTinyScreen(String url, int position, ViewGroup itemContainer,
+                                 XibaVideoPlayerEventCallback eventCallback,
+                                 XibaTinyScreenEventCallback tinyScreenEventCallback,
                                  Point size, float x, float y, boolean canMove){
 
         if (mPlayingPosition != position) {
             togglePlay(url, position, itemContainer, eventCallback);
-            mXibaVideoPlayer.startTinyScreen(size, x, y, canMove);
-            savePlayerInfo();
+
+            startTinyScreen(tinyScreenEventCallback, size, x, y, canMove);
         } else {
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 quitTinyScreen(itemContainer);
+
             } else {
                 if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
                     return;
                 }
 
-                mXibaVideoPlayer.startTinyScreen(size, x, y, canMove);
-                savePlayerInfo();
+                startTinyScreen(tinyScreenEventCallback, size, x, y, canMove);
             }
         }
     }

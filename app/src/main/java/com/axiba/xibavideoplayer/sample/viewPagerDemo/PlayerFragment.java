@@ -142,8 +142,8 @@ public class PlayerFragment extends Fragment {
         /**
          * 如果eventCallback还没有绑定UI 或者 当前Item就是播放Item
          */
-        if (mXibaListPlayUtil.getPlayingPosition() == mPosition || !eventCallback.isBinding()) {
-            eventCallback.bindingPlayerUI(this);
+        if (mXibaListPlayUtil.getPlayingPosition() == mPosition) {
+            eventCallback.bindingPlayerUI(this, mPosition);
         }
     }
 
@@ -158,9 +158,8 @@ public class PlayerFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            //这里一定要先调用togglePlay然后在绑定UI，这样暂停回调方法可以改变之前播放控件的状态
+            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
             mXibaListPlayUtil.togglePlay(mUrl, mPosition, pagerPlayerContainer, eventCallback);
-            eventCallback.bindingPlayerUI(PlayerFragment.this);
         }
     }
 
@@ -172,8 +171,9 @@ public class PlayerFragment extends Fragment {
         @Override
         public void onClick(View v) {
             mFScreenEventCallback.bindingPlayerUI(PlayerFragment.this);
+            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
             mXibaListPlayUtil.startFullScreen(mUrl, mPosition, pagerPlayerContainer, eventCallback, mFScreenEventCallback);
-            eventCallback.bindingPlayerUI(PlayerFragment.this);
+
         }
     }
 
@@ -185,8 +185,8 @@ public class PlayerFragment extends Fragment {
         @Override
         public void onClick(View v) {
 
-            mXibaListPlayUtil.toggleTinyScreen(mUrl, mPosition, pagerPlayerContainer, eventCallback, new Point(500, 300), 600, 1400, true);
-            eventCallback.bindingPlayerUI(PlayerFragment.this);
+            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
+            mXibaListPlayUtil.toggleTinyScreen(mUrl, mPosition, pagerPlayerContainer, eventCallback, eventCallback, new Point(500, 300), 600, 1400, true);
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 tinyScreenBN.setText("返回");
@@ -214,9 +214,11 @@ public class PlayerFragment extends Fragment {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
 
+            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
+
             mXibaListPlayUtil.seekTo(mUrl, mPosition, pagerPlayerContainer,
                     eventCallback, demoSeek.getProgress(), demoSeek.getMax());
-            eventCallback.bindingPlayerUI(PlayerFragment.this);
+
             eventCallback.setTrackingTouchSeekBar(false);
         }
     }

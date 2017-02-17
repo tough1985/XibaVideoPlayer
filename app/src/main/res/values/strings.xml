@@ -1,5 +1,16 @@
 <resources>
     <string name="app_name">XibaVideoPlayer</string>
+    
+    <string name="url_0">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=10935&amp;editionType=default</string>
+    <string name="url_1">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11528&amp;editionType=default</string>
+    <string name="url_2">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11519&amp;editionType=default</string>
+    <string name="url_3">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11526&amp;editionType=default</string>
+    <string name="url_4">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11525&amp;editionType=default</string>
+    <string name="url_5">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11524&amp;editionType=default</string>
+    <string name="url_6">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11523&amp;editionType=default</string>
+    <string name="url_7">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11522&amp;editionType=default</string>
+    <string name="url_8">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11521&amp;editionType=default</string>
+    <string name="url_9">http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11520&amp;editionType=default</string>
 </resources>
 
 
