@@ -215,8 +215,9 @@ public class ListDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             mFScreenEventCallback.setHolder(holder);
-            mXibaListPlayUtil.startFullScreen(url, position, holder.container, eventCallback, mFScreenEventCallback);
             eventCallback.bindHolder(holder, position);
+            mXibaListPlayUtil.startFullScreen(url, position, holder.container, eventCallback, mFScreenEventCallback);
+
         }
     }
 
@@ -237,8 +238,8 @@ public class ListDemoActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
 
-            mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, eventCallback, eventCallback, new Point(500, 300), 600, 1400, true);
             eventCallback.bindHolder(holder, position);
+            mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, eventCallback, eventCallback, new Point(500, 300), 600, 1400, true);
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 holder.tinyscreenBN.setText("返回");

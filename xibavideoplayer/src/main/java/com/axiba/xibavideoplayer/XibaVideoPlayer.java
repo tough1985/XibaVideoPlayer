@@ -1034,6 +1034,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      */
     public void startFullScreen(int orientation){
 //    public void startFullScreen(final boolean hasActionBar, final boolean hasStatusBar){
+        //如果当前在全屏状态或小屏状态，直接返回
         if (mCurrentScreen == SCREEN_WINDOW_FULLSCREEN || mCurrentScreen == SCREEN_WINDOW_TINY) {
             return;
         }

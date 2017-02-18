@@ -69,6 +69,17 @@ public class XibaListPlayUtil {
 
     private UtilHandler mUtilHandler;
 
+    private boolean isStratFullScreen = false;
+    private boolean isStratTinyScreen = false;
+
+    private XibaFullScreenEventCallback mFullScreenEventCallback;
+    private XibaTinyScreenEventCallback mTinyScreenEventCallback;
+
+    private Point mSize;
+    private float mX;
+    private float mY;
+    private boolean mCanMove;
+
     /**
      * 此Handler用于切换播放条目的过程中，
      * 原来的播放控件完成UI逻辑处理
@@ -90,6 +101,7 @@ public class XibaListPlayUtil {
                         int lastState = (int) msgObj.get(KEY_LAST_STATE);
 
                         startPlay(url, position, itemContainer, eventCallback, lastState);
+
                     }
 
                     break;
@@ -126,11 +138,18 @@ public class XibaListPlayUtil {
             return;
         }
 
-        if (mPlayingPosition != position) {
-            togglePlay(url, position, itemContainer, eventCallback);
-        }
+        this.mFullScreenEventCallback = fullScreenEventCallback;
 
-        mXibaVideoPlayer.setFullScreenEventCallback(fullScreenEventCallback);
+        if (mPlayingPosition != position) {
+            isStratFullScreen = true;
+            togglePlay(url, position, itemContainer, eventCallback);
+        } else {
+            enterFullScreen();
+        }
+    }
+
+    private void enterFullScreen(){
+        mXibaVideoPlayer.setFullScreenEventCallback(mFullScreenEventCallback);
         mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         mXibaVideoPlayer.setAutoRotate(false);
     }
@@ -148,15 +167,11 @@ public class XibaListPlayUtil {
 
     /**
      * 进入小屏模式
-     * @param tinyScreenEventCallback
-     * @param size
-     * @param x
-     * @param y
-     * @param canMove
      */
-    private void startTinyScreen(XibaTinyScreenEventCallback tinyScreenEventCallback, Point size, float x, float y, boolean canMove){
-        mXibaVideoPlayer.setTinyScreenEventCallback(tinyScreenEventCallback);
-        mXibaVideoPlayer.startTinyScreen(size, x, y, canMove);
+//    private void startTinyScreen(XibaTinyScreenEventCallback tinyScreenEventCallback, Point size, float x, float y, boolean canMove){
+    private void startTinyScreen(){
+        mXibaVideoPlayer.setTinyScreenEventCallback(mTinyScreenEventCallback);
+        mXibaVideoPlayer.startTinyScreen(mSize, mX, mY, mCanMove);
         savePlayerInfo();
     }
 
@@ -164,7 +179,12 @@ public class XibaListPlayUtil {
      * 退出小屏
      */
     private void quitTinyScreen(ViewGroup itemContainer){
-        mXibaVideoPlayer.quitTinyScreen(itemContainer);
+        if (itemContainer !=  null) {
+            mXibaVideoPlayer.quitTinyScreen(itemContainer);
+        } else {
+            mXibaVideoPlayer.quitTinyScreen();
+        }
+
         mXibaVideoPlayer.setTinyScreenEventCallback(null);
         savePlayerInfo();
     }
@@ -186,10 +206,19 @@ public class XibaListPlayUtil {
                                  XibaTinyScreenEventCallback tinyScreenEventCallback,
                                  Point size, float x, float y, boolean canMove){
 
+        this.mTinyScreenEventCallback = tinyScreenEventCallback;
+        this.mSize = size;
+        this.mX = x;
+        this.mY = y;
+        this.mCanMove = canMove;
+
         if (mPlayingPosition != position) {
+
+            isStratTinyScreen = true;
+
             togglePlay(url, position, itemContainer, eventCallback);
 
-            startTinyScreen(tinyScreenEventCallback, size, x, y, canMove);
+//            startTinyScreen(tinyScreenEventCallback, size, x, y, canMove);
         } else {
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 quitTinyScreen(itemContainer);
@@ -199,7 +228,7 @@ public class XibaListPlayUtil {
                     return;
                 }
 
-                startTinyScreen(tinyScreenEventCallback, size, x, y, canMove);
+                startTinyScreen();
             }
         }
     }
@@ -295,7 +324,8 @@ public class XibaListPlayUtil {
 
             //如果播放器在小屏播放状态，先退出小屏状态
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
-                quitTinyScreen(itemContainer);
+//                quitTinyScreen(itemContainer);
+                quitTinyScreen(null);
             }
 
             //如果播放器在全屏播放状态，先退出全屏状态
@@ -342,6 +372,7 @@ public class XibaListPlayUtil {
                         playingItemPositionChangeImpl.prePlayingItemPositionChange(utilMsg);
 
                         mXibaVideoPlayer.pausePlayer();
+
                     } else if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
 
                         playingItemPositionChangeImpl.prePlayingItemChangeOnPause();
@@ -392,6 +423,15 @@ public class XibaListPlayUtil {
         addToListItem(itemContainer, eventCallback);    //添加到目标容器中
 
         mXibaVideoPlayer.togglePlayPause();     //开始播放
+
+        //如果是在全屏播放的过程中，开始播放之后进入全屏状态
+        if (isStratFullScreen) {
+            enterFullScreen();
+            isStratFullScreen = false;
+        } else if (isStratTinyScreen) {     //如果是在进入小屏播放的过程中，开始播放之后进入小屏状态
+            startTinyScreen();
+            isStratTinyScreen = false;
+        }
     }
 
     /**
