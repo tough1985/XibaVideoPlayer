@@ -142,7 +142,7 @@ public class PlayerFragment extends Fragment {
         /**
          * 如果eventCallback还没有绑定UI 或者 当前Item就是播放Item
          */
-        if (mXibaListPlayUtil.getPlayingPosition() == mPosition) {
+        if (mXibaListPlayUtil.getPlayingIndex() == mPosition) {
             eventCallback.bindingPlayerUI(this, mPosition);
         }
     }

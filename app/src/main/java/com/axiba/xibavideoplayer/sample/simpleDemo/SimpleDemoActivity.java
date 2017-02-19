@@ -1,4 +1,4 @@
-package com.axiba.xibavideoplayer.sample;
+package com.axiba.xibavideoplayer.sample.simpleDemo;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
@@ -19,6 +19,7 @@ import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
+import com.axiba.xibavideoplayer.sample.R;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**

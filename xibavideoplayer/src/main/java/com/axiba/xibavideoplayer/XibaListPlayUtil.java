@@ -244,6 +244,7 @@ public class XibaListPlayUtil {
      */
     public void seekTo(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
                        int progress, int maxProgress){
+        //如果当前播放索引不是目标播放索引，切换播放位置
         if (mPlayingPosition != position) {
             PlayerStateInfo stateInfo = stateInfoList.get(position);
             if (stateInfo != null) {
@@ -256,7 +257,18 @@ public class XibaListPlayUtil {
         } else {
             mXibaVideoPlayer.seekTo(progress);
         }
+    }
 
+    /**
+     * 跳转播放位置
+     * @param progress
+     */
+    public void seekTo(int progress){
+        mXibaVideoPlayer.seekTo(progress);
+    }
+
+    public XibaVideoPlayer getXibaVideoPlayer(){
+        return mXibaVideoPlayer;
     }
 
     /**
@@ -282,8 +294,36 @@ public class XibaListPlayUtil {
         return mXibaVideoPlayer.isScreenLock();
     }
 
-    public int getPlayingPosition(){
+    /**
+     * 获取当前播放索引
+     * @return
+     */
+    public int getPlayingIndex(){
         return mPlayingPosition;
+    }
+
+    /**
+     * 获取当前视频总时长
+     * @return
+     */
+    public long getDuration(){
+        return mXibaVideoPlayer.getDuration();
+    }
+
+    /**
+     * 获取当前播放位置
+     * @return
+     */
+    public long getCurrentPosition(){
+        return mXibaVideoPlayer.getCurrentPositionWhenPlaying();
+    }
+
+    /**
+     * 获得当前状态
+     * @return
+     */
+    public int getCurrentState(){
+        return mXibaVideoPlayer.getCurrentState();
     }
 
     /**
@@ -292,6 +332,64 @@ public class XibaListPlayUtil {
      */
     public void lockScreen(boolean lock){
         mXibaVideoPlayer.setScreenLock(lock);
+    }
+
+    /**
+     * 获取全屏状态下，垂直滑动屏幕时的功能
+     */
+    public int getFullScreenVerticalFeature() {
+        return mXibaVideoPlayer.getFullScreenVerticalFeature();
+    }
+
+    /**
+     * 设置全屏状态下，垂直滑动屏幕时的功能
+     */
+    public void setFullScreenVerticalFeature(int fullScreenVerticalFeature) {
+        mXibaVideoPlayer.setFullScreenVerticalFeature(fullScreenVerticalFeature);
+    }
+
+    /**
+     * 获取全屏状态下，水平滑动屏幕时的功能
+     */
+    public int getFullScreenHorizontalFeature() {
+        return mXibaVideoPlayer.getFullScreenHorizontalFeature();
+    }
+
+    /**
+     * 设置全屏状态下，水平滑动屏幕时的功能
+     * @param fullScreenHorizontalFeature
+     */
+    public void setFullScreenHorizontalFeature(int fullScreenHorizontalFeature) {
+        mXibaVideoPlayer.setFullScreenHorizontalFeature(fullScreenHorizontalFeature);
+    }
+
+    /**
+     * 获取水平滑动影响值
+     * @return
+     */
+    public int getHorizontalSlopInfluenceValue() {
+        return mXibaVideoPlayer.getHorizontalSlopInfluenceValue();
+    }
+
+    /**
+     * 设置水平滑动的影响值
+     * 例如参数为2，那么滑动整个屏幕改变整个播放器时长的一半
+     * 参数需要大于0的整数，传入参数如果小于等于0，自动将参数修改为1
+     * 推荐在onPlayerPrepare事件中，获取视频长度之后，根据需求修改此参数
+     * @param horizontalSlopInfluenceValue
+     */
+    public void setHorizontalSlopInfluenceValue(int horizontalSlopInfluenceValue) {
+        mXibaVideoPlayer.setHorizontalSlopInfluenceValue(horizontalSlopInfluenceValue);
+    }
+
+    /**
+     * 为播放器设置事件回调
+     * @param eventCallback
+     */
+    public void setEventCallback(XibaVideoPlayerEventCallback eventCallback){
+        if (eventCallback != null) {
+            mXibaVideoPlayer.setEventCallback(eventCallback);
+        }
     }
 
     public boolean onBackPress(){

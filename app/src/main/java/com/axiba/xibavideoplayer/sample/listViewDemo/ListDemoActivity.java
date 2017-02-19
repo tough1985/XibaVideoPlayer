@@ -14,6 +14,7 @@ import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -26,6 +27,7 @@ import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.sample.R;
+import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 
@@ -48,16 +50,22 @@ public class ListDemoActivity extends AppCompatActivity {
 
     private String[] urls;
 
-    private ViewGroup fullScreenContainer;
+//    private ViewGroup fullScreenContainer;
+//
+//    private Button fScreenPlayBN;
+//    private Button fScreenBackToNormalBN;
+//    private Button fScreenLockScreenBN;
+//    private TextView fScreenCurrentTimeTV;
+//    private TextView fScreenTotalTimeTV;
+//    private SeekBar fScreenDemoSeek;
+//    private TextView fScreenPositionChangingInfoTV;
+//    private RelativeLayout fScreenBottomContainerRL;
+//    private LinearLayout fScreenVolumeBrightLL;
+//    private TextView fScreenVolumeBrightTV;
+//    private SeekBar fScreenVolumeBrightSeek;
 
-    private Button fScreenPlayBN;
-    private Button fScreenBackToNormalBN;
-    private Button fScreenLockScreenBN;
-    private TextView fScreenCurrentTimeTV;
-    private TextView fScreenTotalTimeTV;
-    private SeekBar fScreenDemoSeek;
-    private TextView fScreenPositionChangingInfoTV;
-    private RelativeLayout fScreenBottomContainerRL;
+    //全屏容器
+    private FullScreenContainer mFullScreenContainer;
 
     private Message mUtilMsg;
 
@@ -214,7 +222,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            mFScreenEventCallback.setHolder(holder);
+//            mFScreenEventCallback.setHolder(holder);
             eventCallback.bindHolder(holder, position);
             mXibaListPlayUtil.startFullScreen(url, position, holder.container, eventCallback, mFScreenEventCallback);
 
@@ -249,6 +257,9 @@ public class ListDemoActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 进度条监听
+     */
     private class SeekProgressListener implements SeekBar.OnSeekBarChangeListener{
 
         private ViewHolder holder;
@@ -308,7 +319,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
             holder.progressSeek.setProgress(progress);
 
-            if (mXibaListPlayUtil.getPlayingPosition() == position) {
+            if (mXibaListPlayUtil.getPlayingIndex() == position) {
                 holder.progressSeek.setEnabled(true);
             } else {
                 holder.progressSeek.setEnabled(false);
@@ -332,9 +343,7 @@ public class ListDemoActivity extends AppCompatActivity {
          * 如果eventCallback还没有绑定UI 或者 当前Item就是播放Item
          */
 //        if (mXibaListPlayUtil.getPlayingPosition() == position || !eventCallback.isBinding()) {
-        if (mXibaListPlayUtil.getPlayingPosition() == position
-//                || eventCallback.getHolder() == null
-                ) {
+        if (mXibaListPlayUtil.getPlayingIndex() == position) {
             eventCallback.bindHolder(holder, position);
         }
     }
@@ -342,91 +351,146 @@ public class ListDemoActivity extends AppCompatActivity {
     /**
      * 初始化全屏控件
      */
-    private void initFullScreenUI(ViewHolder holder){
+//    private void initFullScreenUI(){
+//
+//        if (fullScreenContainer != null){
+//            fScreenPlayBN = (Button) fullScreenContainer.findViewById(R.id.demo_play);
+//            fScreenBackToNormalBN = (Button) fullScreenContainer.findViewById(R.id.back_to_normal_BN);
+//            fScreenLockScreenBN = (Button) fullScreenContainer.findViewById(R.id.lock_screen_BN);
+//            fScreenCurrentTimeTV = (TextView) fullScreenContainer.findViewById(R.id.current_time);
+//            fScreenTotalTimeTV = (TextView) fullScreenContainer.findViewById(R.id.total_time);
+//            fScreenDemoSeek = (SeekBar) fullScreenContainer.findViewById(R.id.demo_seek);
+//            fScreenPositionChangingInfoTV = (TextView) fullScreenContainer.findViewById(R.id.position_changing_info_TV);
+//            fScreenBottomContainerRL = (RelativeLayout) fullScreenContainer.findViewById(R.id.full_screen_bottom_container_RL);
+//
+//            fScreenVolumeBrightLL = (LinearLayout) fullScreenContainer.findViewById(R.id.full_screen_volume_bright_LL);
+//            fScreenVolumeBrightTV = (TextView) fullScreenContainer.findViewById(R.id.full_screen_volume_bright_TV);
+//            fScreenVolumeBrightSeek = (SeekBar) fullScreenContainer.findViewById(R.id.full_screen_volume_bright_seek);
+//
+//            //全屏播放按钮监听
+//            fScreenPlayBN.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    mXibaListPlayUtil.togglePlay();
+//                }
+//            });
+//
+//            //退出全屏按钮监听
+//            fScreenBackToNormalBN.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    mXibaListPlayUtil.quitFullScreen();
+//                }
+//            });
+//
+//            //锁屏按钮监听
+//            fScreenLockScreenBN.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    if (mXibaListPlayUtil.isScreenLock()) {
+//                        mXibaListPlayUtil.lockScreen(false);
+//                        fScreenLockScreenBN.setText("锁屏");
+//                        showFullScreenUI();     //显示全部控件
+//                    } else {
+//                        mXibaListPlayUtil.lockScreen(true);
+//                        fScreenLockScreenBN.setText("解锁");
+//                        dismissFullScreenUI();  //隐藏全部控件
+//                    }
+//                }
+//            });
+//
+//            //进度条监听
+//            fScreenDemoSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//                @Override
+//                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//
+//                }
+//
+//                @Override
+//                public void onStartTrackingTouch(SeekBar seekBar) {
+//                    isTrackingTouchSeekBar = true;
+//                }
+//
+//                @Override
+//                public void onStopTrackingTouch(SeekBar seekBar) {
+//                    mXibaListPlayUtil.seekTo(seekBar.getProgress());
+//                    isTrackingTouchSeekBar = false;
+//                }
+//            });
+//
+//            //设置播放按钮状态
+//            if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
+//                fScreenPlayBN.setText("暂停");
+//            } else {
+//                fScreenPlayBN.setText("播放");
+//            }
+//
+//            //如果视频未加载，进度条不可用
+//            if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_NORMAL
+//                    || mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_ERROR) {
+//
+//                fScreenDemoSeek.setEnabled(false);
+//            } else {
+//
+//                fScreenDemoSeek.setEnabled(true);
+//
+//                long totalTimeDuration = mXibaListPlayUtil.getDuration();
+//                long currentTimePosition = mXibaListPlayUtil.getCurrentPosition();
+//
+//                //设置视频总时长和当前播放位置
+//                fScreenCurrentTimeTV.setText(XibaUtil.stringForTime(currentTimePosition));
+//                fScreenTotalTimeTV.setText(XibaUtil.stringForTime(totalTimeDuration));
+//
+//                int progress = (int) (currentTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
+//
+//                //设置进度条位置
+//                fScreenDemoSeek.setProgress(progress);
+//            }
+//
+//            //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
+//            mXibaListPlayUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
+//
+//            //全屏状态下，水平滑动改变播放位置
+//            mXibaListPlayUtil.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
+//
+//            //全屏状态下，水平滑动改变位置的总量为屏幕的 1/4
+//            mXibaListPlayUtil.setHorizontalSlopInfluenceValue(4);
+//        }
+//
+//    }
 
-        if (fullScreenContainer != null){
-            fScreenPlayBN = (Button) fullScreenContainer.findViewById(R.id.demo_play);
-            fScreenBackToNormalBN = (Button) fullScreenContainer.findViewById(R.id.back_to_normal_BN);
-            fScreenLockScreenBN = (Button) fullScreenContainer.findViewById(R.id.lock_screen_BN);
-            fScreenCurrentTimeTV = (TextView) fullScreenContainer.findViewById(R.id.current_time);
-            fScreenTotalTimeTV = (TextView) fullScreenContainer.findViewById(R.id.total_time);
-            fScreenDemoSeek = (SeekBar) fullScreenContainer.findViewById(R.id.demo_seek);
-            fScreenPositionChangingInfoTV = (TextView) fullScreenContainer.findViewById(R.id.position_changing_info_TV);
-            fScreenBottomContainerRL = (RelativeLayout) fullScreenContainer.findViewById(R.id.full_screen_bottom_container_RL);
-
-            fScreenPlayBN.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mXibaListPlayUtil.togglePlay();
-                }
-            });
-
-            fScreenBackToNormalBN.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mXibaListPlayUtil.quitFullScreen();
-                }
-            });
-
-            fScreenLockScreenBN.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mXibaListPlayUtil.isScreenLock()) {
-                        mXibaListPlayUtil.lockScreen(false);
-                        fScreenLockScreenBN.setText("锁屏");
-                        showFullScreenUI();     //显示全部控件
-                    } else {
-                        mXibaListPlayUtil.lockScreen(true);
-                        fScreenLockScreenBN.setText("解锁");
-                        dismissFullScreenUI();  //隐藏全部控件
-                    }
-                }
-            });
-
-            if (holder != null) {
-                fScreenPlayBN.setText(holder.startBN.getText());
-                fScreenCurrentTimeTV.setText(holder.currentTimeTV.getText());
-                fScreenTotalTimeTV.setText(holder.totalTimeTV.getText());
-                fScreenDemoSeek.setProgress(holder.progressSeek.getProgress());
-                fScreenDemoSeek.setEnabled(holder.progressSeek.isEnabled());
-            }
-
-        }
-
-    }
-
-    /**
-     * 释放全屏控件
-     */
-    private void releaseFullScreenUI(){
-        if (fScreenPlayBN != null) {
-            fScreenPlayBN = null;
-        }
-        if (fScreenBackToNormalBN != null) {
-            fScreenBackToNormalBN = null;
-        }
-        if (fScreenLockScreenBN != null) {
-            fScreenLockScreenBN = null;
-        }
-        if (fScreenCurrentTimeTV != null) {
-            fScreenCurrentTimeTV = null;
-        }
-        if (fScreenCurrentTimeTV != null) {
-            fScreenCurrentTimeTV = null;
-        }
-        if (fScreenTotalTimeTV != null) {
-            fScreenTotalTimeTV = null;
-        }
-        if (fScreenDemoSeek != null) {
-            fScreenDemoSeek = null;
-        }
-        if (fScreenPositionChangingInfoTV != null) {
-            fScreenPositionChangingInfoTV = null;
-        }
-        if (fScreenBottomContainerRL != null) {
-            fScreenBottomContainerRL = null;
-        }
-    }
+//    /**
+//     * 释放全屏控件
+//     */
+//    private void releaseFullScreenUI(){
+//        if (fScreenPlayBN != null) {
+//            fScreenPlayBN = null;
+//        }
+//        if (fScreenBackToNormalBN != null) {
+//            fScreenBackToNormalBN = null;
+//        }
+//        if (fScreenLockScreenBN != null) {
+//            fScreenLockScreenBN = null;
+//        }
+//        if (fScreenCurrentTimeTV != null) {
+//            fScreenCurrentTimeTV = null;
+//        }
+//        if (fScreenCurrentTimeTV != null) {
+//            fScreenCurrentTimeTV = null;
+//        }
+//        if (fScreenTotalTimeTV != null) {
+//            fScreenTotalTimeTV = null;
+//        }
+//        if (fScreenDemoSeek != null) {
+//            fScreenDemoSeek = null;
+//        }
+//        if (fScreenPositionChangingInfoTV != null) {
+//            fScreenPositionChangingInfoTV = null;
+//        }
+//        if (fScreenBottomContainerRL != null) {
+//            fScreenBottomContainerRL = null;
+//        }
+//    }
 
     /**
      * 播放器回调事件
@@ -439,7 +503,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
         public void bindHolder(ViewHolder holder, int position) {
 
-            if (this.holder == null || mXibaListPlayUtil.getPlayingPosition() == position) {
+            if (this.holder == null || mXibaListPlayUtil.getPlayingIndex() == position) {
                 this.holder = holder;
             } else {
                 this.nextHolder = holder;
@@ -466,12 +530,14 @@ public class ListDemoActivity extends AppCompatActivity {
             holder.startBN.setText("暂停");
 
             if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                fScreenPlayBN.setText("暂停");
+//                fScreenPlayBN.setText("暂停");
             }
         }
 
         @Override
         public void onPlayerProgressUpdate(int progress, int secProgress, long currentTime, long totalTime) {
+
+            //处理列表屏幕和小屏幕相关逻辑
 
             holder.currentTimeTV.setText(XibaUtil.stringForTime(currentTime));
             holder.totalTimeTV.setText(XibaUtil.stringForTime(totalTime));
@@ -490,17 +556,21 @@ public class ListDemoActivity extends AppCompatActivity {
                 holder.loadingPB.setVisibility(View.GONE);
             }
 
-            //处理全屏相关逻辑
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                fScreenCurrentTimeTV.setText(XibaUtil.stringForTime(currentTime));
-                fScreenTotalTimeTV.setText(XibaUtil.stringForTime(totalTime));
-
-                fScreenDemoSeek.setProgress(progress);
-                fScreenDemoSeek.setSecondaryProgress(secProgress);
-                if (!fScreenDemoSeek.isEnabled()) {
-                    fScreenDemoSeek.setEnabled(true);
-                }
-            }
+//            //处理全屏相关逻辑
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//
+//                fScreenCurrentTimeTV.setText(XibaUtil.stringForTime(currentTime));
+//                fScreenTotalTimeTV.setText(XibaUtil.stringForTime(totalTime));
+//
+//                if (!isTrackingTouchSeekBar) {
+//                    fScreenDemoSeek.setProgress(progress);
+//                }
+//
+//                fScreenDemoSeek.setSecondaryProgress(secProgress);
+//                if (!fScreenDemoSeek.isEnabled()) {
+//                    fScreenDemoSeek.setEnabled(true);
+//                }
+//            }
         }
 
         @Override
@@ -508,9 +578,9 @@ public class ListDemoActivity extends AppCompatActivity {
 //            Log.e(TAG, "onPlayerPause");
             holder.startBN.setText("播放");
 
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                fScreenPlayBN.setText("播放");
-            }
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                fScreenPlayBN.setText("播放");
+//            }
 
             if (mUtilMsg != null) {
                 holder.progressSeek.setEnabled(false);
@@ -534,58 +604,108 @@ public class ListDemoActivity extends AppCompatActivity {
         public void onPlayerResume() {
             holder.startBN.setText("暂停");
 
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                fScreenPlayBN.setText("暂停");
-            }
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                fScreenPlayBN.setText("暂停");
+//            }
         }
 
         @Override
         public void onPlayerComplete() {
             holder.startBN.setText("播放");
 
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                fScreenPlayBN.setText("播放");
-            }
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                fScreenPlayBN.setText("播放");
+//            }
         }
 
         @Override
         public void onPlayerAutoComplete() {
             holder.startBN.setText("播放");
 
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                fScreenPlayBN.setText("播放");
-            }
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                fScreenPlayBN.setText("播放");
+//            }
         }
 
         @Override
         public void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration) {
             int progress = (int) (seekTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
             holder.progressSeek.setProgress(progress);
+
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//
+//                //显示前进或后退了多少秒
+//                if (fScreenPositionChangingInfoTV.getVisibility() != View.VISIBLE) {
+//                    fScreenPositionChangingInfoTV.setVisibility(View.VISIBLE);
+//                }
+//
+//                long seekPosition = seekTimePosition - originPosition;
+//                StringBuilder sb = new StringBuilder();
+//                if (seekPosition > 0) {
+//                    sb.append("+");
+//                } else if(seekPosition < 0){
+//                    sb.append("-");
+//                }
+//                sb.append(XibaUtil.stringForTime(Math.abs(seekTimePosition - originPosition)));
+//                fScreenPositionChangingInfoTV.setText(sb.toString());
+//
+//                //设置进度条
+//                fScreenDemoSeek.setProgress(progress);
+//            }
         }
 
         @Override
         public void onChangingPositionEnd() {
-
+            //隐藏跳转播放信息
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                if (fScreenPositionChangingInfoTV.getVisibility() != View.GONE) {
+//                    fScreenPositionChangingInfoTV.setVisibility(View.GONE);
+//                }
+//            }
         }
 
         @Override
         public void onChangingVolume(int percent) {
-
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//
+//                if (fScreenVolumeBrightLL.getVisibility() != View.VISIBLE) {
+//                    fScreenVolumeBrightLL.setVisibility(View.VISIBLE);
+//                }
+//
+//                fScreenVolumeBrightTV.setText("音量");
+//                fScreenVolumeBrightSeek.setProgress(percent);
+//            }
         }
 
         @Override
         public void onChangingVolumeEnd() {
-
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                if (fScreenVolumeBrightLL.getVisibility() != View.GONE) {
+//                    fScreenVolumeBrightLL.setVisibility(View.GONE);
+//                }
+//            }
         }
 
         @Override
         public void onChangingBrightness(int percent) {
-
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//
+//                if (fScreenVolumeBrightLL.getVisibility() != View.VISIBLE) {
+//                    fScreenVolumeBrightLL.setVisibility(View.VISIBLE);
+//                }
+//
+//                fScreenVolumeBrightTV.setText("亮度");
+//                fScreenVolumeBrightSeek.setProgress(percent);
+//            }
         }
 
         @Override
         public void onChangingBrightnessEnd() {
-
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                if (fScreenVolumeBrightLL.getVisibility() != View.GONE) {
+//                    fScreenVolumeBrightLL.setVisibility(View.GONE);
+//                }
+//            }
         }
 
         @Override
@@ -611,7 +731,9 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onEnterTinyScreen() {
-
+            if (holder != null) {
+                holder.tinyscreenBN.setText("返回");
+            }
         }
 
         @Override
@@ -624,32 +746,30 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onSingleTap() {
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                toggleShowHideFullScreenUI();
-            }
+            //全屏播放时，单击播放器，显示或隐藏播放器控件
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                toggleShowHideFullScreenUI();
+//            }
         }
 
         @Override
         public void onDoubleTap() {
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                mXibaListPlayUtil.togglePlay();
-            }
+            //全屏播放时，双击播放器切换播放状态
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                mXibaListPlayUtil.togglePlay();
+//            }
         }
 
         @Override
         public void onTouchLockedScreen() {
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-                //显示或隐藏锁屏按钮
-                toggleShowHideLockBN();
-            }
+//            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//                //显示或隐藏锁屏按钮
+//                toggleShowHideLockBN();
+//            }
         }
 
         @Override
         public void onStartLoading() {
-//            if (!isBinding) {
-//                return;
-//            }
-            Log.e(TAG, "onStartLoading");
             if (holder != null && holder.loadingPB.getVisibility() != View.VISIBLE) {
                 holder.loadingPB.setVisibility(View.VISIBLE);
             }
@@ -661,78 +781,99 @@ public class ListDemoActivity extends AppCompatActivity {
      * 全屏回调事件
      */
     private class ListFullScreenEventCallback implements XibaFullScreenEventCallback{
-        private ViewHolder holder;
+//        private ViewHolder holder;
 
-        public void setHolder(ViewHolder holder) {
-            this.holder = holder;
-        }
-
-        public ViewHolder getHolder(){
-            return holder;
-        }
+//        public void setHolder(ViewHolder holder) {
+//            this.holder = holder;
+//        }
+//
+//        public ViewHolder getHolder(){
+//            return holder;
+//        }
 
         @Override
         public ViewGroup onEnterFullScreen() {
-            ViewGroup contentView = (ViewGroup) ListDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
+            //获取contentView
+//            ViewGroup contentView = (ViewGroup) ListDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
 
-            fullScreenContainer = (ViewGroup) getLayoutInflater()
-                    .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
+//            //获取全屏控件
+//            fullScreenContainer = (ViewGroup) getLayoutInflater()
+//                    .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
 
-            initFullScreenUI(holder);
-            return fullScreenContainer;
+            mFullScreenContainer = new FullScreenContainer(ListDemoActivity.this);
+
+            //初始化全屏控件
+//            initFullScreenUI();
+            mFullScreenContainer.initUI(mXibaListPlayUtil.getXibaVideoPlayer());
+
+            mXibaListPlayUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
+
+            //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
+            mXibaListPlayUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
+
+            //全屏状态下，水平滑动改变播放位置
+            mXibaListPlayUtil.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
+
+            //全屏状态下，水平滑动改变位置的总量为屏幕的 1/4
+            mXibaListPlayUtil.setHorizontalSlopInfluenceValue(4);
+
+            return mFullScreenContainer;
         }
 
         @Override
         public void onQuitFullScreen() {
-            releaseFullScreenUI();
+//            releaseFullScreenUI();
+            mFullScreenContainer.releaseFullScreenUI();
+
+            mXibaListPlayUtil.setEventCallback(eventCallback);
         }
     }
 
-    /**
-     * 显示全部控件
-     */
-    private void showFullScreenUI(){
-        fScreenBottomContainerRL.setVisibility(View.VISIBLE);
-        fScreenBackToNormalBN.setVisibility(View.VISIBLE);
-        fScreenPlayBN.setVisibility(View.VISIBLE);
-        fScreenLockScreenBN.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * 隐藏全部控件
-     */
-    private void dismissFullScreenUI(){
-        fScreenBottomContainerRL.setVisibility(View.GONE);
-        fScreenBackToNormalBN.setVisibility(View.GONE);
-        fScreenPlayBN.setVisibility(View.GONE);
-        fScreenLockScreenBN.setVisibility(View.GONE);
-    }
-
-    /**
-     * 显示或隐藏全屏UI控件
-     */
-    private void toggleShowHideFullScreenUI(){
-        if (fScreenBottomContainerRL != null) {
-            if (fScreenBottomContainerRL.getVisibility() == View.VISIBLE) {
-                dismissFullScreenUI();
-            } else {
-                showFullScreenUI();
-            }
-        }
-    }
-
-    /**
-     * 显示或隐藏锁屏按钮
-     */
-    private void toggleShowHideLockBN(){
-        if (fScreenLockScreenBN != null) {
-            if (fScreenLockScreenBN.getVisibility() == View.VISIBLE) {
-                fScreenLockScreenBN.setVisibility(View.GONE);
-            } else {
-                fScreenLockScreenBN.setVisibility(View.VISIBLE);
-            }
-        }
-    }
+//    /**
+//     * 显示全部控件
+//     */
+//    private void showFullScreenUI(){
+//        fScreenBottomContainerRL.setVisibility(View.VISIBLE);
+//        fScreenBackToNormalBN.setVisibility(View.VISIBLE);
+//        fScreenPlayBN.setVisibility(View.VISIBLE);
+//        fScreenLockScreenBN.setVisibility(View.VISIBLE);
+//    }
+//
+//    /**
+//     * 隐藏全部控件
+//     */
+//    private void dismissFullScreenUI(){
+//        fScreenBottomContainerRL.setVisibility(View.GONE);
+//        fScreenBackToNormalBN.setVisibility(View.GONE);
+//        fScreenPlayBN.setVisibility(View.GONE);
+//        fScreenLockScreenBN.setVisibility(View.GONE);
+//    }
+//
+//    /**
+//     * 显示或隐藏全屏UI控件
+//     */
+//    private void toggleShowHideFullScreenUI(){
+//        if (fScreenBottomContainerRL != null) {
+//            if (fScreenBottomContainerRL.getVisibility() == View.VISIBLE) {
+//                dismissFullScreenUI();
+//            } else {
+//                showFullScreenUI();
+//            }
+//        }
+//    }
+//
+//    /**
+//     * 显示或隐藏锁屏按钮
+//     */
+//    private void toggleShowHideLockBN(){
+//        if (fScreenLockScreenBN != null) {
+//            if (fScreenLockScreenBN.getVisibility() == View.VISIBLE) {
+//                fScreenLockScreenBN.setVisibility(View.GONE);
+//            } else {
+//                fScreenLockScreenBN.setVisibility(View.VISIBLE);
+//            }
+//        }
+//    }
 
     @Override
     public void onBackPressed() {

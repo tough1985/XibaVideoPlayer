@@ -67,7 +67,7 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback, X
 
     public void bindingPlayerUI(PlayerFragment playerFragment, int position) {
 
-        if (this.playerUI == null || mXibaListPlayUtil.getPlayingPosition() == position) {
+        if (this.playerUI == null || mXibaListPlayUtil.getPlayingIndex() == position) {
             this.playerUI = playerFragment;
             bindingUIItem();
         } else {

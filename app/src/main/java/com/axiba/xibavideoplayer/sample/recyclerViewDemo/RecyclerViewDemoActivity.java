@@ -325,7 +325,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             holder.tinyscreenBN.setText("小屏");
         }
 
-        if (mXibaListPlayUtil.getPlayingPosition() == position) {
+        if (mXibaListPlayUtil.getPlayingIndex() == position) {
             mEventCallback.bindHolder(holder, position);
         }
     }
@@ -430,7 +430,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 //        }
 
         public void bindHolder(PlayerListAdapter.PlayerViewHolder holder, int position){
-            if (this.holder == null || mXibaListPlayUtil.getPlayingPosition() == position) {
+            if (this.holder == null || mXibaListPlayUtil.getPlayingIndex() == position) {
                 this.holder = holder;
             } else {
                 this.nextHolder = holder;
