@@ -723,7 +723,7 @@ public class XibaListPlayUtil {
     /**
      * 保存当前正在播放的播放器状态
      */
-    private PlayerStateInfo savePlayerInfo(){
+    public PlayerStateInfo savePlayerInfo(){
         PlayerStateInfo playerStateInfo = stateInfoList.get(mPlayingPosition);
 
         if (playerStateInfo == null) {

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 import com.axiba.xibavideoplayer.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.sample.R;
+import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**
@@ -101,6 +103,7 @@ public class PlayerFragment extends Fragment {
 
     public void initUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo){
 
+        Log.e(TAG, "initUIByPlayerInfo mPosition=" + mPosition);
         if (playerStateInfo != null) {
             if (playerStateInfo.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
                 play.setText("暂停");
@@ -119,7 +122,7 @@ public class PlayerFragment extends Fragment {
 
             demoSeek.setProgress(progress);
 
-            if (playerStateInfo.getPosition() == mPosition) {
+            if (mXibaListPlayUtil.getPlayingIndex() == mPosition) {
                 demoSeek.setEnabled(true);
             } else {
                 demoSeek.setEnabled(false);
@@ -256,4 +259,35 @@ public class PlayerFragment extends Fragment {
         return loadingPB;
     }
     //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --getter methods end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+
+    public void resetUI() {
+        //设置播放按钮状态
+        if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
+            play.setText("暂停");
+        } else {
+            play.setText("播放");
+        }
+
+        //如果视频未加载，进度条不可用
+        if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_NORMAL
+                || mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_ERROR) {
+
+            demoSeek.setEnabled(false);
+        } else {
+
+            demoSeek.setEnabled(true);
+
+            long totalTimeDuration = mXibaListPlayUtil.getDuration();
+            long currentTimePosition = mXibaListPlayUtil.getCurrentPosition();
+
+            //设置视频总时长和当前播放位置
+            currentTimeTV.setText(XibaUtil.stringForTime(currentTimePosition));
+            totalTimeTV.setText(XibaUtil.stringForTime(totalTimeDuration));
+
+            int progress = (int) (currentTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
+
+            //设置进度条位置
+            demoSeek.setProgress(progress);
+        }
+    }
 }

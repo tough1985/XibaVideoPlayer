@@ -20,6 +20,8 @@ import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.sample.R;
+import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
+import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**
@@ -50,7 +52,7 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
     private SeekProgressListener mSeekProgressListener;
 
     private StartFullScreenListener mStartFullScreenListener;   //全屏按钮监听
-    private BackToNormalListener mBackToNormalListener; //退出全屏监听
+//    private BackToNormalListener mBackToNormalListener; //退出全屏监听
 
     private boolean isTrackingTouchSeekBar = false;     //是否正在控制SeekBar
 
@@ -70,7 +72,8 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
     String url = "http://baobab.kaiyanapp.com/api/v1/playUrl?vid=11086&editionType=default";
 
-
+    //全屏容器
+    private FullScreenContainer mFullScreenContainer;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -140,33 +143,33 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         horizontalFeatureChangePositionBN.setOnClickListener(mHorizontalFeatureListener);
     }
 
-    /**
-     * 根据屏幕状态，重新加载控件
-     * @param isNormalScreen true 正常屏幕; false 全屏
-     */
-    private void initUIByScreenType(boolean isNormalScreen){
-
-        //保存控件状态
-        String tempPlayBNState = play.getText().toString();
-        String tempCurrentTime = currentTimeTV.getText().toString();
-        String tempTotalTime = totalTimeTV.getText().toString();
-        int progress = demoSeek.getProgress();
-
-        if (isNormalScreen) {
-            initNormalScreenUI();
-        } else {
-            initFullScreenUI();
-        }
-
-        //恢复控件状态
-        play.setText(tempPlayBNState);
-        currentTimeTV.setText(tempCurrentTime);
-        totalTimeTV.setText(tempTotalTime);
-        demoSeek.setProgress(progress);
-
-        //重新添加监听
-        setListeners();
-    }
+//    /**
+//     * 根据屏幕状态，重新加载控件
+//     * @param isNormalScreen true 正常屏幕; false 全屏
+//     */
+//    private void initUIByScreenType(boolean isNormalScreen){
+//
+//        //保存控件状态
+//        String tempPlayBNState = play.getText().toString();
+//        String tempCurrentTime = currentTimeTV.getText().toString();
+//        String tempTotalTime = totalTimeTV.getText().toString();
+//        int progress = demoSeek.getProgress();
+//
+//        if (isNormalScreen) {
+//            initNormalScreenUI();
+////        } else {
+////            initFullScreenUI();
+//        }
+//
+//        //恢复控件状态
+//        play.setText(tempPlayBNState);
+//        currentTimeTV.setText(tempCurrentTime);
+//        totalTimeTV.setText(tempTotalTime);
+//        demoSeek.setProgress(progress);
+//
+//        //重新添加监听
+//        setListeners();
+//    }
 
     /**
      * 初始化正常屏幕控件
@@ -180,17 +183,17 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         positionChangingInfoTV = (TextView) findViewById(R.id.position_changing_info_TV);
     }
 
-    /**
-     * 初始化全屏控件
-     */
-    private void initFullScreenUI(){
-        //重新初始化控件
-        play = (Button) fullScreenContainer.findViewById(R.id.demo_play);
-        currentTimeTV = (TextView) fullScreenContainer.findViewById(R.id.current_time);
-        totalTimeTV = (TextView) fullScreenContainer.findViewById(R.id.total_time);
-        demoSeek = (SeekBar) fullScreenContainer.findViewById(R.id.demo_seek);
-        positionChangingInfoTV = (TextView) fullScreenContainer.findViewById(R.id.position_changing_info_TV);
-    }
+//    /**
+//     * 初始化全屏控件
+//     */
+//    private void initFullScreenUI(){
+//        //重新初始化控件
+//        play = (Button) fullScreenContainer.findViewById(R.id.demo_play);
+//        currentTimeTV = (TextView) fullScreenContainer.findViewById(R.id.current_time);
+//        totalTimeTV = (TextView) fullScreenContainer.findViewById(R.id.total_time);
+//        demoSeek = (SeekBar) fullScreenContainer.findViewById(R.id.demo_seek);
+//        positionChangingInfoTV = (TextView) fullScreenContainer.findViewById(R.id.position_changing_info_TV);
+//    }
 
     /**
      * 设置监听
@@ -347,31 +350,55 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
     @Override
     public ViewGroup onEnterFullScreen() {
-        ViewGroup contentView = (ViewGroup) SimpleDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
+//        ViewGroup contentView = (ViewGroup) SimpleDemoActivity.this.findViewById(Window.ID_ANDROID_CONTENT);
+//
+//        fullScreenContainer = (ViewGroup) getLayoutInflater()
+//                .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
+//
+//        //初始化全屏控件
+//        initUIByScreenType(false);
+//
+//        fullScreenBottomContainerRL = (RelativeLayout) fullScreenContainer.findViewById(R.id.full_screen_bottom_container_RL);
+//
+//        //退出全屏按钮
+//        backToNormalBN = (Button) fullScreenContainer.findViewById(R.id.back_to_normal_BN);
+//        backToNormalBN.setOnClickListener(getBackToNormalListener());
+//
+//        //锁屏
+//        lockScreenBN = (Button) fullScreenContainer.findViewById(R.id.lock_screen_BN);
+//        lockScreenBN.setOnClickListener(new LockScreenListener());
+//
+//        return fullScreenContainer;
 
-        fullScreenContainer = (ViewGroup) getLayoutInflater()
-                .inflate(R.layout.activity_simple_demo_fullscreen, contentView, false);
+        mFullScreenContainer = new FullScreenContainer(SimpleDemoActivity.this);
 
         //初始化全屏控件
-        initUIByScreenType(false);
+//            initFullScreenUI();
+        mFullScreenContainer.initUI(xibaVP);
 
-        fullScreenBottomContainerRL = (RelativeLayout) fullScreenContainer.findViewById(R.id.full_screen_bottom_container_RL);
+        xibaVP.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
 
-        //退出全屏按钮
-        backToNormalBN = (Button) fullScreenContainer.findViewById(R.id.back_to_normal_BN);
-        backToNormalBN.setOnClickListener(getBackToNormalListener());
+        //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
+        xibaVP.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
 
-        //锁屏
-        lockScreenBN = (Button) fullScreenContainer.findViewById(R.id.lock_screen_BN);
-        lockScreenBN.setOnClickListener(new LockScreenListener());
+        //全屏状态下，水平滑动改变播放位置
+        xibaVP.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
 
-        return fullScreenContainer;
+        //全屏状态下，水平滑动改变位置的总量为屏幕的 1/4
+        xibaVP.setHorizontalSlopInfluenceValue(4);
+        return mFullScreenContainer;
     }
 
     @Override
     public void onQuitFullScreen() {
+        mFullScreenContainer.releaseFullScreenUI();
+
         //初始化普通屏控件
-        initUIByScreenType(true);
+//        initUIByScreenType(true);
+        resetUI();
+
+        //绑定List的eventCallback
+        xibaVP.setEventCallback(SimpleDemoActivity.this);
     }
 
     @Override
@@ -386,9 +413,9 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
     @Override
     public void onSingleTap() {
-        if (xibaVP.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-            toggleShowHideFullScreenUI();
-        }
+//        if (xibaVP.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
+//            toggleShowHideFullScreenUI();
+//        }
     }
 
     @Override
@@ -399,7 +426,7 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
     @Override
     public void onTouchLockedScreen() {
         //显示或隐藏锁屏按钮
-        toggleShowHideLockBN();
+//        toggleShowHideLockBN();
     }
 
     @Override
@@ -410,6 +437,36 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
     }
     //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --XibaVideoPlayerEventCallback methods end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
+    private void resetUI() {
+        //设置播放按钮状态
+        if (xibaVP.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
+            play.setText("暂停");
+        } else {
+            play.setText("播放");
+        }
+
+        //如果视频未加载，进度条不可用
+        if (xibaVP.getCurrentState() == XibaVideoPlayer.STATE_NORMAL
+                || xibaVP.getCurrentState() == XibaVideoPlayer.STATE_ERROR) {
+
+            demoSeek.setEnabled(false);
+        } else {
+
+            demoSeek.setEnabled(true);
+
+            long totalTimeDuration = xibaVP.getDuration();
+            long currentTimePosition = xibaVP.getCurrentPositionWhenPlaying();
+
+            //设置视频总时长和当前播放位置
+            currentTimeTV.setText(XibaUtil.stringForTime(currentTimePosition));
+            totalTimeTV.setText(XibaUtil.stringForTime(totalTimeDuration));
+
+            int progress = (int) (currentTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
+
+            //设置进度条位置
+            demoSeek.setProgress(progress);
+        }
+    }
 
     /**
      * ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ --StartButtonOnClickListener start-- ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
@@ -448,22 +505,22 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
     /**
      * ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ --BackToNormalListener start-- ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
      */
-    private class BackToNormalListener implements View.OnClickListener{
-        @Override
-        public void onClick(View v) {
-//            //初始化全屏控件
-//            initUIByScreenType(true);
-
-            xibaVP.quitFullScreen();
-        }
-    }
-
-    private BackToNormalListener getBackToNormalListener(){
-        if (mBackToNormalListener == null) {
-            mBackToNormalListener = new BackToNormalListener();
-        }
-        return mBackToNormalListener;
-    }
+//    private class BackToNormalListener implements View.OnClickListener{
+//        @Override
+//        public void onClick(View v) {
+////            //初始化全屏控件
+////            initUIByScreenType(true);
+//
+//            xibaVP.quitFullScreen();
+//        }
+//    }
+//
+//    private BackToNormalListener getBackToNormalListener(){
+//        if (mBackToNormalListener == null) {
+//            mBackToNormalListener = new BackToNormalListener();
+//        }
+//        return mBackToNormalListener;
+//    }
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --BackToNormalListener end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
     /**
@@ -556,68 +613,68 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         }
     }
 
-    /**
-     * 锁屏按钮监听
-     */
-    private class LockScreenListener implements View.OnClickListener{
-
-        @Override
-        public void onClick(View v) {
-            if (xibaVP.isScreenLock()) {
-                xibaVP.setScreenLock(false);
-                lockScreenBN.setText("锁屏");
-                showFullScreenUI();     //显示全部控件
-            } else {
-                xibaVP.setScreenLock(true);
-                lockScreenBN.setText("解锁");
-                dismissFullScreenUI();  //隐藏全部控件
-            }
-        }
-    }
-
-    /**
-     * 显示全部控件
-     */
-    private void showFullScreenUI(){
-        fullScreenBottomContainerRL.setVisibility(View.VISIBLE);
-        backToNormalBN.setVisibility(View.VISIBLE);
-        play.setVisibility(View.VISIBLE);
-        lockScreenBN.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * 隐藏全部控件
-     */
-    private void dismissFullScreenUI(){
-        fullScreenBottomContainerRL.setVisibility(View.GONE);
-        backToNormalBN.setVisibility(View.GONE);
-        play.setVisibility(View.GONE);
-        lockScreenBN.setVisibility(View.GONE);
-    }
-
-    /**
-     * 显示或隐藏全屏UI控件
-     */
-    private void toggleShowHideFullScreenUI(){
-        if (fullScreenBottomContainerRL != null) {
-            if (fullScreenBottomContainerRL.getVisibility() == View.VISIBLE) {
-                dismissFullScreenUI();
-            } else {
-                showFullScreenUI();
-            }
-        }
-    }
-
-    /**
-     * 显示或隐藏锁屏按钮
-     */
-    private void toggleShowHideLockBN(){
-        if (lockScreenBN != null) {
-            if (lockScreenBN.getVisibility() == View.VISIBLE) {
-                lockScreenBN.setVisibility(View.GONE);
-            } else {
-                lockScreenBN.setVisibility(View.VISIBLE);
-            }
-        }
-    }
+//    /**
+//     * 锁屏按钮监听
+//     */
+//    private class LockScreenListener implements View.OnClickListener{
+//
+//        @Override
+//        public void onClick(View v) {
+//            if (xibaVP.isScreenLock()) {
+//                xibaVP.setScreenLock(false);
+//                lockScreenBN.setText("锁屏");
+//                showFullScreenUI();     //显示全部控件
+//            } else {
+//                xibaVP.setScreenLock(true);
+//                lockScreenBN.setText("解锁");
+//                dismissFullScreenUI();  //隐藏全部控件
+//            }
+//        }
+//    }
+//
+//    /**
+//     * 显示全部控件
+//     */
+//    private void showFullScreenUI(){
+//        fullScreenBottomContainerRL.setVisibility(View.VISIBLE);
+//        backToNormalBN.setVisibility(View.VISIBLE);
+//        play.setVisibility(View.VISIBLE);
+//        lockScreenBN.setVisibility(View.VISIBLE);
+//    }
+//
+//    /**
+//     * 隐藏全部控件
+//     */
+//    private void dismissFullScreenUI(){
+//        fullScreenBottomContainerRL.setVisibility(View.GONE);
+//        backToNormalBN.setVisibility(View.GONE);
+//        play.setVisibility(View.GONE);
+//        lockScreenBN.setVisibility(View.GONE);
+//    }
+//
+//    /**
+//     * 显示或隐藏全屏UI控件
+//     */
+//    private void toggleShowHideFullScreenUI(){
+//        if (fullScreenBottomContainerRL != null) {
+//            if (fullScreenBottomContainerRL.getVisibility() == View.VISIBLE) {
+//                dismissFullScreenUI();
+//            } else {
+//                showFullScreenUI();
+//            }
+//        }
+//    }
+//
+//    /**
+//     * 显示或隐藏锁屏按钮
+//     */
+//    private void toggleShowHideLockBN(){
+//        if (lockScreenBN != null) {
+//            if (lockScreenBN.getVisibility() == View.VISIBLE) {
+//                lockScreenBN.setVisibility(View.GONE);
+//            } else {
+//                lockScreenBN.setVisibility(View.VISIBLE);
+//            }
+//        }
+//    }
 }

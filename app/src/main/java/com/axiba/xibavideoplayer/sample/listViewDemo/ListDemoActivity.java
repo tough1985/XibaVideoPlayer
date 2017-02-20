@@ -27,6 +27,7 @@ import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.sample.R;
+import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
 import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
@@ -222,7 +223,6 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-//            mFScreenEventCallback.setHolder(holder);
             eventCallback.bindHolder(holder, position);
             mXibaListPlayUtil.startFullScreen(url, position, holder.container, eventCallback, mFScreenEventCallback);
 
@@ -301,6 +301,7 @@ public class ListDemoActivity extends AppCompatActivity {
      * @param holder
      */
     private void initHolderUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo, ViewHolder holder, int position){
+        Log.e(TAG, "initHolderUIByPlayerInfo");
         if (playerStateInfo != null) {
             if (playerStateInfo.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
                 holder.startBN.setText("暂停");
@@ -525,18 +526,15 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onPlayerPrepare() {
-//            Log.e(TAG, "onPlayerPrepare");
+            Log.e(TAG, "onPlayerPrepare");
 
             holder.startBN.setText("暂停");
 
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-//                fScreenPlayBN.setText("暂停");
-            }
         }
 
         @Override
         public void onPlayerProgressUpdate(int progress, int secProgress, long currentTime, long totalTime) {
-
+            Log.e(TAG, "onPlayerProgressUpdate");
             //处理列表屏幕和小屏幕相关逻辑
 
             holder.currentTimeTV.setText(XibaUtil.stringForTime(currentTime));
@@ -575,7 +573,7 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onPlayerPause() {
-//            Log.e(TAG, "onPlayerPause");
+            Log.e(TAG, "onPlayerPause");
             holder.startBN.setText("播放");
 
 //            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
@@ -781,15 +779,6 @@ public class ListDemoActivity extends AppCompatActivity {
      * 全屏回调事件
      */
     private class ListFullScreenEventCallback implements XibaFullScreenEventCallback{
-//        private ViewHolder holder;
-
-//        public void setHolder(ViewHolder holder) {
-//            this.holder = holder;
-//        }
-//
-//        public ViewHolder getHolder(){
-//            return holder;
-//        }
 
         @Override
         public ViewGroup onEnterFullScreen() {
@@ -822,12 +811,20 @@ public class ListDemoActivity extends AppCompatActivity {
 
         @Override
         public void onQuitFullScreen() {
+            Log.e(TAG, "onQuitFullScreen");
 //            releaseFullScreenUI();
             mFullScreenContainer.releaseFullScreenUI();
 
+            //手动调用保存播放信息，防止在暂停之后，返回List播放，播放器UI不一致的情况
+            //需要注意，RecyclerView的处理方式不一样，具体请参考RecyclerView的Demo
+            mXibaListPlayUtil.savePlayerInfo();
+
+            //绑定List的eventCallback
             mXibaListPlayUtil.setEventCallback(eventCallback);
+
         }
     }
+
 
 //    /**
 //     * 显示全部控件

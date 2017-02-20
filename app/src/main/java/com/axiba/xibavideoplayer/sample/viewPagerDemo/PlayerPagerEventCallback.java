@@ -26,8 +26,6 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback, X
     private Button tinyScreenBN;
     private ProgressBar loadingPB;
 
-//    private boolean isBinding = false;
-
     private boolean isTrackingTouchSeekBar = false;
 
 
@@ -132,17 +130,8 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback, X
 
     @Override
     public void onPlayerPrepare() {
-//        if (!isBinding) {
-//            return;
-//        }
 
         play.setText("暂停");
-
-//        if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
-//            play.setText("暂停");
-//        }
-
-
     }
 
     @Override
@@ -271,12 +260,12 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback, X
 
     @Override
     public void onEnterTinyScreen() {
-
+        tinyScreenBN.setText("返回");
     }
 
     @Override
     public void onQuitTinyScreen() {
-
+        tinyScreenBN.setText("小屏");
     }
 
     @Override
