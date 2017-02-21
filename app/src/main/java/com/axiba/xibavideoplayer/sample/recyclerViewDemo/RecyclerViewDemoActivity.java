@@ -16,11 +16,14 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.axiba.xibavideoplayer.listUtils.PlayerStateInfo;
+import com.axiba.xibavideoplayer.listUtils.XibaBaseListUtil;
 import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
+import com.axiba.xibavideoplayer.listUtils.XibaListUtil;
 import com.axiba.xibavideoplayer.sample.DividerItemDecoration;
 import com.axiba.xibavideoplayer.sample.R;
 import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;
@@ -38,7 +41,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private PlayerListAdapter mPlayerListAdapter;
 
-    private XibaListPlayUtil mXibaListPlayUtil;
+    private XibaListUtil mXibaListUtil;
 
     private ListEventCallback mEventCallback;
     private ListFullScreenEventCallback mFScreenEventCallback;
@@ -51,6 +54,9 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
     private FullScreenContainer mFullScreenContainer;
 
     private Message mUtilMsg;
+
+    //是否正在Loading
+    private boolean isLoadingProgressShow = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,12 +75,12 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         mPlayerListRV.setAdapter(mPlayerListAdapter);
         mPlayerListRV.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 
-        mXibaListPlayUtil = new XibaListPlayUtil(this);
+        mXibaListUtil = new XibaListUtil(this);
 
         mEventCallback = new ListEventCallback();
         mFScreenEventCallback = new ListFullScreenEventCallback();
 
-        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+        mXibaListUtil.setPlayingItemPositionChangeImpl(new XibaBaseListUtil.PlayingItemPositionChange() {
             @Override
             public void prePlayingItemPositionChange(Message utilMsg) {
                 mUtilMsg = utilMsg;
@@ -89,6 +95,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
                     //如果loading正在显示，在这里隐藏
                     if (mEventCallback.getHolder().loadingPB.getVisibility() == View.VISIBLE) {
                         mEventCallback.getHolder().loadingPB.setVisibility(View.GONE);
+                        isLoadingProgressShow = false;
                     }
 
                     mEventCallback.changeHolder();
@@ -104,7 +111,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
      * @param playerStateInfo
      * @param holder
      */
-    private void initHolderUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo, PlayerListAdapter.PlayerViewHolder holder, int position) {
+    private void initHolderUIByPlayerInfo(PlayerStateInfo playerStateInfo, PlayerListAdapter.PlayerViewHolder holder, int position) {
         if (playerStateInfo != null) {
             if (playerStateInfo.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
                 holder.startBN.setText("暂停");
@@ -120,16 +127,31 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
             int progress = (int) (currentTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
 
-
+            //设置进度条进度
             holder.progressSeek.setProgress(progress);
 
-            if (mXibaListPlayUtil.getPlayingIndex() == position) {
+            if (mXibaListUtil.getPlayingIndex() == position) {  //如果当前索引为播放索引
+                //设置进度条可用
                 holder.progressSeek.setEnabled(true);
-            } else {
+
+                //如果正在加载，显示LoadingProgress，
+                if (isLoadingProgressShow && holder.loadingPB.getVisibility() != View.VISIBLE) {
+                    holder.loadingPB.setVisibility(View.VISIBLE);
+                }
+            } else {    //如果当前索引不是播放索引
+
+                //设置进度条不可用
                 holder.progressSeek.setEnabled(false);
+
+                //如果显示了LoadingProgress，隐藏LoadingProgress
+                if (holder.loadingPB.getVisibility() == View.VISIBLE) {
+                    holder.loadingPB.setVisibility(View.GONE);
+                }
             }
 
+            //如果当前屏幕类型为小屏播放
             if (playerStateInfo.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
+                //设置小屏按钮内容
                 holder.tinyscreenBN.setText("返回");
             } else {
                 holder.tinyscreenBN.setText("小屏");
@@ -141,16 +163,19 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             holder.progressSeek.setProgress(0);
             holder.progressSeek.setEnabled(false);
             holder.tinyscreenBN.setText("小屏");
+            if (holder.loadingPB.getVisibility() == View.VISIBLE) {
+                holder.loadingPB.setVisibility(View.GONE);
+            }
         }
 
-        if (mXibaListPlayUtil.getPlayingIndex() == position) {
+        if (mXibaListUtil.getPlayingIndex() == position) {
             mEventCallback.bindHolder(holder, position);
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (mXibaListPlayUtil.onBackPress()) {
+        if (mXibaListUtil.onBackPress()) {
             return;
         }
         super.onBackPressed();
@@ -158,7 +183,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        mXibaListPlayUtil.release();
+        mXibaListUtil.release();
         super.onDestroy();
     }
 
@@ -185,7 +210,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
              * 调用XibaListPlayUtil.resolveItem来判断播放器是否添加到当前的item中
              * 并根据返回的PlayerStateInfo来决定Item中其他控件的状态
              */
-            XibaListPlayUtil.PlayerStateInfo playerStateInfo = mXibaListPlayUtil.resolveItem(position, holder.container, mEventCallback);
+            PlayerStateInfo playerStateInfo = mXibaListUtil.resolveItem(position, holder.container, mEventCallback);
 
             initHolderUIByPlayerInfo(playerStateInfo, holder, position);
         }
@@ -240,9 +265,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         public void onClick(View v) {
 
             mEventCallback.bindHolder(holder, position);
-
-            mXibaListPlayUtil.togglePlay(url, position, holder.container, mEventCallback);
-//            mEventCallback.setHolder(holder);
+            mXibaListUtil.togglePlay(url, position, holder.container, mEventCallback);
         }
     }
 
@@ -264,7 +287,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         public void onClick(View v) {
             mEventCallback.bindHolder(holder, position);
             mFScreenEventCallback.setHolder(holder);
-            mXibaListPlayUtil.startFullScreen(url, position, holder.container, mEventCallback, mFScreenEventCallback);
+            mXibaListUtil.startFullScreen(url, position, holder.container, mEventCallback, mFScreenEventCallback);
 //            mEventCallback.setHolder(holder);
         }
     }
@@ -287,11 +310,9 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         public void onClick(View v) {
 
             mEventCallback.bindHolder(holder, position);
+            mXibaListUtil.toggleTinyScreen(url, position, holder.container, mEventCallback, mEventCallback, new Point(500, 300), 600, 1400, true);
 
-            mXibaListPlayUtil.toggleTinyScreen(url, position, holder.container, mEventCallback, mEventCallback, new Point(500, 300), 600, 1400, true);
-//            mEventCallback.setHolder(holder);
-
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
+            if (mXibaListUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 holder.tinyscreenBN.setText("返回");
             } else {
                 holder.tinyscreenBN.setText("小屏");
@@ -327,9 +348,8 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
             mEventCallback.bindHolder(holder, position);
 
-            mXibaListPlayUtil.seekTo(url, position, holder.container,
+            mXibaListUtil.seekTo(url, position, holder.container,
                     mEventCallback, holder.progressSeek.getProgress(), holder.progressSeek.getMax());
-//            mEventCallback.setHolder(holder);
             isTrackingTouchSeekBar = false;
         }
     }
@@ -340,12 +360,8 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
         private PlayerListAdapter.PlayerViewHolder nextHolder;
 
-//        public void setHolder(PlayerListAdapter.PlayerViewHolder holder) {
-//            this.holder = holder;
-//        }
-
         public void bindHolder(PlayerListAdapter.PlayerViewHolder holder, int position) {
-            if (this.holder == null || mXibaListPlayUtil.getPlayingIndex() == position) {
+            if (this.holder == null || mXibaListUtil.getPlayingIndex() == position) {
                 this.holder = holder;
             } else {
                 this.nextHolder = holder;
@@ -387,6 +403,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             //如果loading正在显示，在这里隐藏
             if (holder.loadingPB.getVisibility() == View.VISIBLE) {
                 holder.loadingPB.setVisibility(View.GONE);
+                isLoadingProgressShow = false;
             }
 
         }
@@ -401,6 +418,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
                 //如果loading正在显示，在这里隐藏
                 if (holder.loadingPB.getVisibility() == View.VISIBLE) {
                     holder.loadingPB.setVisibility(View.GONE);
+                    isLoadingProgressShow = false;
                 }
 
                 //在这里解除对Holder的绑定，否则loading会出现在上一个Item中
@@ -492,6 +510,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         public void onStartLoading() {
             if (holder != null && holder.loadingPB.getVisibility() != View.VISIBLE) {
                 holder.loadingPB.setVisibility(View.VISIBLE);
+                isLoadingProgressShow = true;
             }
         }
     }
@@ -515,18 +534,18 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
             //初始化全屏控件
 //            initFullScreenUI();
-            mFullScreenContainer.initUI(mXibaListPlayUtil.getXibaVideoPlayer());
+            mFullScreenContainer.initUI(mXibaListUtil.getXibaVideoPlayer());
 
-            mXibaListPlayUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
+            mXibaListUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
 
             //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
-            mXibaListPlayUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
+            mXibaListUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
 
             //全屏状态下，水平滑动改变播放位置
-            mXibaListPlayUtil.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
+            mXibaListUtil.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
 
             //全屏状态下，水平滑动改变位置的总量为屏幕的 1/4
-            mXibaListPlayUtil.setHorizontalSlopInfluenceValue(4);
+            mXibaListUtil.setHorizontalSlopInfluenceValue(4);
             return mFullScreenContainer;
         }
 
@@ -542,7 +561,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
                 resetUI(holder);
             }
             //绑定List的eventCallback
-            mXibaListPlayUtil.setEventCallback(mEventCallback);
+            mXibaListUtil.setEventCallback(mEventCallback);
 
 
         }
@@ -551,23 +570,23 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 
     private void resetUI(PlayerListAdapter.PlayerViewHolder holder) {
         //设置播放按钮状态
-        if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
+        if (mXibaListUtil.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
             holder.startBN.setText("暂停");
         } else {
             holder.startBN.setText("播放");
         }
 
         //如果视频未加载，进度条不可用
-        if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_NORMAL
-                || mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_ERROR) {
+        if (mXibaListUtil.getCurrentState() == XibaVideoPlayer.STATE_NORMAL
+                || mXibaListUtil.getCurrentState() == XibaVideoPlayer.STATE_ERROR) {
 
             holder.progressSeek.setEnabled(false);
         } else {
 
             holder.progressSeek.setEnabled(true);
 
-            long totalTimeDuration = mXibaListPlayUtil.getDuration();
-            long currentTimePosition = mXibaListPlayUtil.getCurrentPosition();
+            long totalTimeDuration = mXibaListUtil.getDuration();
+            long currentTimePosition = mXibaListUtil.getCurrentPosition();
 
             //设置视频总时长和当前播放位置
             holder.currentTimeTV.setText(XibaUtil.stringForTime(currentTimePosition));

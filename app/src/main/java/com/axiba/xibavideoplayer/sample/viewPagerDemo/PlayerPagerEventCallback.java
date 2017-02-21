@@ -7,9 +7,11 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.axiba.xibavideoplayer.listUtils.XibaBaseListUtil;
 import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
+import com.axiba.xibavideoplayer.listUtils.XibaListUtil;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**
@@ -33,14 +35,14 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback, X
 
     private PlayerFragment nextPlayerUI;
 
-    private XibaListPlayUtil mXibaListPlayUtil;
+    private XibaListUtil mXibaListUtil;
 
     private Message mUtilMsg;
 
-    public PlayerPagerEventCallback(XibaListPlayUtil mXibaListPlayUtil) {
-        this.mXibaListPlayUtil = mXibaListPlayUtil;
+    public PlayerPagerEventCallback(XibaListUtil xibaListUtil) {
+        this.mXibaListUtil = xibaListUtil;
 
-        mXibaListPlayUtil.setPlayingItemPositionChangeImpl(new XibaListPlayUtil.PlayingItemPositionChange() {
+        mXibaListUtil.setPlayingItemPositionChangeImpl(new XibaBaseListUtil.PlayingItemPositionChange() {
 
             @Override
             public void prePlayingItemPositionChange(Message utilMsg) {
@@ -65,7 +67,7 @@ public class PlayerPagerEventCallback implements XibaVideoPlayerEventCallback, X
 
     public void bindingPlayerUI(PlayerFragment playerFragment, int position) {
 
-        if (this.playerUI == null || mXibaListPlayUtil.getPlayingIndex() == position) {
+        if (this.playerUI == null || mXibaListUtil.getPlayingIndex() == position) {
             this.playerUI = playerFragment;
             bindingUIItem();
         } else {

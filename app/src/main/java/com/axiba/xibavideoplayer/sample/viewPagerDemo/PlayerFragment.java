@@ -14,8 +14,10 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.axiba.xibavideoplayer.listUtils.PlayerStateInfo;
 import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
+import com.axiba.xibavideoplayer.listUtils.XibaListUtil;
 import com.axiba.xibavideoplayer.sample.R;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
@@ -42,8 +44,9 @@ public class PlayerFragment extends Fragment {
     private Button tinyScreenBN;
     private ProgressBar loadingPB;
 
-    private XibaListPlayUtil mXibaListPlayUtil;
-    private PlayerPagerEventCallback eventCallback;
+    private XibaListUtil mXibaListUtil;
+
+    private PlayerPagerEventCallback mEventCallback;
     private ViewPagerDemoActivity.PlayerFullScreenEventCallback mFScreenEventCallback;
 
     public static PlayerFragment newInstance(String url, int position){
@@ -91,15 +94,15 @@ public class PlayerFragment extends Fragment {
         tinyScreenBN.setOnClickListener(new TinyScreenListener());
         demoSeek.setOnSeekBarChangeListener(new SeekProgressListener());
 
-        mXibaListPlayUtil = ((ViewPagerDemoActivity)getActivity()).getXibaListPlayUtil();
-        eventCallback = ((ViewPagerDemoActivity)getActivity()).getEventCallback();
+        mXibaListUtil = ((ViewPagerDemoActivity)getActivity()).getXibaListUtil();
+        mEventCallback = ((ViewPagerDemoActivity)getActivity()).getEventCallback();
         mFScreenEventCallback = ((ViewPagerDemoActivity)getActivity()).getFScreenEventCallback();
 
-        XibaListPlayUtil.PlayerStateInfo playerStateInfo = mXibaListPlayUtil.resolveItem(mPosition, pagerPlayerContainer, eventCallback);
+        PlayerStateInfo playerStateInfo = mXibaListUtil.resolveItem(mPosition, pagerPlayerContainer, mEventCallback);
         initUIByPlayerInfo(playerStateInfo);
     }
 
-    public void initUIByPlayerInfo(XibaListPlayUtil.PlayerStateInfo playerStateInfo){
+    public void initUIByPlayerInfo(PlayerStateInfo playerStateInfo){
 
         Log.e(TAG, "initUIByPlayerInfo mPosition=" + mPosition);
         if (playerStateInfo != null) {
@@ -120,7 +123,7 @@ public class PlayerFragment extends Fragment {
 
             demoSeek.setProgress(progress);
 
-            if (mXibaListPlayUtil.getPlayingIndex() == mPosition) {
+            if (mXibaListUtil.getPlayingIndex() == mPosition) {
                 demoSeek.setEnabled(true);
             } else {
                 demoSeek.setEnabled(false);
@@ -141,10 +144,10 @@ public class PlayerFragment extends Fragment {
         }
 
         /**
-         * 如果eventCallback还没有绑定UI 或者 当前Item就是播放Item
+         * 如果mEventCallback还没有绑定UI 或者 当前Item就是播放Item
          */
-        if (mXibaListPlayUtil.getPlayingIndex() == mPosition) {
-            eventCallback.bindingPlayerUI(this, mPosition);
+        if (mXibaListUtil.getPlayingIndex() == mPosition) {
+            mEventCallback.bindingPlayerUI(this, mPosition);
         }
     }
 
@@ -159,8 +162,8 @@ public class PlayerFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
-            mXibaListPlayUtil.togglePlay(mUrl, mPosition, pagerPlayerContainer, eventCallback);
+            mEventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
+            mXibaListUtil.togglePlay(mUrl, mPosition, pagerPlayerContainer, mEventCallback);
         }
     }
 
@@ -172,8 +175,8 @@ public class PlayerFragment extends Fragment {
         @Override
         public void onClick(View v) {
             mFScreenEventCallback.bindingPlayerUI(PlayerFragment.this);
-            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
-            mXibaListPlayUtil.startFullScreen(mUrl, mPosition, pagerPlayerContainer, eventCallback, mFScreenEventCallback);
+            mEventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
+            mXibaListUtil.startFullScreen(mUrl, mPosition, pagerPlayerContainer, mEventCallback, mFScreenEventCallback);
 
         }
     }
@@ -186,10 +189,10 @@ public class PlayerFragment extends Fragment {
         @Override
         public void onClick(View v) {
 
-            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
-            mXibaListPlayUtil.toggleTinyScreen(mUrl, mPosition, pagerPlayerContainer, eventCallback, eventCallback, new Point(500, 300), 600, 1400, true);
+            mEventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
+            mXibaListUtil.toggleTinyScreen(mUrl, mPosition, pagerPlayerContainer, mEventCallback, mEventCallback, new Point(500, 300), 600, 1400, true);
 
-            if (mXibaListPlayUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
+            if (mXibaListUtil.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
                 tinyScreenBN.setText("返回");
             } else {
                 tinyScreenBN.setText("小屏");
@@ -209,18 +212,18 @@ public class PlayerFragment extends Fragment {
 
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
-            eventCallback.setTrackingTouchSeekBar(true);
+            mEventCallback.setTrackingTouchSeekBar(true);
         }
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
 
-            eventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
+            mEventCallback.bindingPlayerUI(PlayerFragment.this, mPosition);
 
-            mXibaListPlayUtil.seekTo(mUrl, mPosition, pagerPlayerContainer,
-                    eventCallback, demoSeek.getProgress(), demoSeek.getMax());
+            mXibaListUtil.seekTo(mUrl, mPosition, pagerPlayerContainer,
+                    mEventCallback, demoSeek.getProgress(), demoSeek.getMax());
 
-            eventCallback.setTrackingTouchSeekBar(false);
+            mEventCallback.setTrackingTouchSeekBar(false);
         }
     }
     //↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ --listeners end-- ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
@@ -260,23 +263,23 @@ public class PlayerFragment extends Fragment {
 
     public void resetUI() {
         //设置播放按钮状态
-        if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
+        if (mXibaListUtil.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
             play.setText("暂停");
         } else {
             play.setText("播放");
         }
 
         //如果视频未加载，进度条不可用
-        if (mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_NORMAL
-                || mXibaListPlayUtil.getCurrentState() == XibaVideoPlayer.STATE_ERROR) {
+        if (mXibaListUtil.getCurrentState() == XibaVideoPlayer.STATE_NORMAL
+                || mXibaListUtil.getCurrentState() == XibaVideoPlayer.STATE_ERROR) {
 
             demoSeek.setEnabled(false);
         } else {
 
             demoSeek.setEnabled(true);
 
-            long totalTimeDuration = mXibaListPlayUtil.getDuration();
-            long currentTimePosition = mXibaListPlayUtil.getCurrentPosition();
+            long totalTimeDuration = mXibaListUtil.getDuration();
+            long currentTimePosition = mXibaListUtil.getCurrentPosition();
 
             //设置视频总时长和当前播放位置
             currentTimeTV.setText(XibaUtil.stringForTime(currentTimePosition));

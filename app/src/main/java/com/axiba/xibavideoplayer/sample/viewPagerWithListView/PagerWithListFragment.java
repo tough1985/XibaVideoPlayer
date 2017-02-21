@@ -46,6 +46,8 @@ public class PagerWithListFragment extends Fragment{
     //全屏回调事件
     private PagerWithListActivity.PlayerFullScreenEventCallback mFScreenCallback;
 
+
+
     public static PagerWithListFragment newInstance(String[] urls, int mFragmentIndex){
         PagerWithListFragment instance = new PagerWithListFragment();
         Bundle args = new Bundle();
@@ -276,8 +278,6 @@ public class PagerWithListFragment extends Fragment{
     private void initHolderUIByPlayerInfo(PlayerStateInfo playerStateInfo, ViewHolder holder, int position){
         Log.e(TAG, "fragmentIndex=" + mFragmentIndex + " : listPosition=" + position);
 
-
-
         if (playerStateInfo != null) {
 
             Log.e(TAG, playerStateInfo.toString());
@@ -296,17 +296,31 @@ public class PagerWithListFragment extends Fragment{
 
             int progress = (int) (currentTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
 
-
+            //设置进度条进度
             holder.progressSeek.setProgress(progress);
 
+            if (mXibaPagerWithListUtil.isCurrentPlayingIndex(mFragmentIndex, position)) {  //如果当前索引为播放索引
 
-            if (mXibaPagerWithListUtil.isCurrentPlayingIndex(mFragmentIndex, position)) {
+                //设置进度条可用
                 holder.progressSeek.setEnabled(true);
-            } else {
+                //如果正在加载，显示LoadingProgress，
+                if (mEventCallback.isLoadingProgressShow() && holder.loadingPB.getVisibility() != View.VISIBLE) {
+                    holder.loadingPB.setVisibility(View.VISIBLE);
+                }
+            } else {    //如果当前索引不是播放索引
+
+                //设置进度条不可用
                 holder.progressSeek.setEnabled(false);
+
+                //如果显示了LoadingProgress，隐藏LoadingProgress
+                if (holder.loadingPB.getVisibility() == View.VISIBLE) {
+                    holder.loadingPB.setVisibility(View.GONE);
+                }
             }
 
+            //如果当前屏幕类型为小屏播放
             if (playerStateInfo.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
+                //设置小屏按钮内容
                 holder.tinyscreenBN.setText("返回");
             } else {
                 holder.tinyscreenBN.setText("小屏");
@@ -318,6 +332,11 @@ public class PagerWithListFragment extends Fragment{
             holder.progressSeek.setProgress(0);
             holder.progressSeek.setEnabled(false);
             holder.tinyscreenBN.setText("小屏");
+
+            //如果显示了LoadingProgress，隐藏LoadingProgress
+            if (holder.loadingPB.getVisibility() == View.VISIBLE) {
+                holder.loadingPB.setVisibility(View.GONE);
+            }
         }
 
         /**

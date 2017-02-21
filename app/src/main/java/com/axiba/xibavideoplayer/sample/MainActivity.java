@@ -11,6 +11,7 @@ import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivit
 import com.axiba.xibavideoplayer.sample.simpleDemo.SimpleDemoActivity;
 import com.axiba.xibavideoplayer.sample.viewPagerDemo.ViewPagerDemoActivity;
 import com.axiba.xibavideoplayer.sample.viewPagerWithListView.PagerWithListActivity;
+import com.axiba.xibavideoplayer.sample.viewPagerWithRecyclerView.PagerWithRecyclerActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button recyclerviewDemoBN;
     private Button viewpagerDemoBN;
     private Button pagerWithListBN;
+    private Button pagerWithRecyclerBN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerviewDemoBN = (Button) findViewById(R.id.recyclerview_demo_BN);
         viewpagerDemoBN = (Button) findViewById(R.id.viewpager_demo_BN);
         pagerWithListBN = (Button) findViewById(R.id.pager_with_list_BN);
+        pagerWithRecyclerBN = (Button) findViewById(R.id.pager_with_recycler_BN);
 
         ijkDemoBN.setOnClickListener(this);
         xibaSimpleDemoBN.setOnClickListener(this);
@@ -44,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerviewDemoBN.setOnClickListener(this);
         viewpagerDemoBN.setOnClickListener(this);
         pagerWithListBN.setOnClickListener(this);
+        pagerWithRecyclerBN.setOnClickListener(this);
     }
 
 
@@ -72,6 +76,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.pager_with_list_BN:
                 target = PagerWithListActivity.class;
+                break;
+            case R.id.pager_with_recycler_BN:
+                target = PagerWithRecyclerActivity.class;
                 break;
 
         }

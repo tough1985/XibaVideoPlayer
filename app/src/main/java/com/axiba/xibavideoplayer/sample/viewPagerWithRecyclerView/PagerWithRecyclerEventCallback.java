@@ -1,4 +1,4 @@
-package com.axiba.xibavideoplayer.sample.viewPagerWithListView;
+package com.axiba.xibavideoplayer.sample.viewPagerWithRecyclerView;
 
 import android.os.Message;
 import android.view.View;
@@ -7,13 +7,15 @@ import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.listUtils.XibaBaseListUtil;
 import com.axiba.xibavideoplayer.listUtils.XibaPagerWithListUtil;
+import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
+import com.axiba.xibavideoplayer.sample.viewPagerWithListView.PagerWithListFragment;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**
- * Created by xiba on 2017/2/20.
+ * Created by xiba on 2017/2/21.
  */
-public class PagerWithListEventCallback implements XibaVideoPlayerEventCallback, XibaTinyScreenEventCallback {
 
+public class PagerWithRecyclerEventCallback  implements XibaVideoPlayerEventCallback, XibaTinyScreenEventCallback {
     private XibaPagerWithListUtil mXibaPagerWithListUtil;
 
     private Message mUtilMsg;
@@ -29,7 +31,7 @@ public class PagerWithListEventCallback implements XibaVideoPlayerEventCallback,
         isLoadingProgressShow = loadingProgressShow;
     }
 
-    public PagerWithListEventCallback(XibaPagerWithListUtil xibaPagerWithListUtil) {
+    public PagerWithRecyclerEventCallback(XibaPagerWithListUtil xibaPagerWithListUtil) {
         this.mXibaPagerWithListUtil = xibaPagerWithListUtil;
 
         mXibaPagerWithListUtil.setPlayingItemPositionChangeImpl(new XibaBaseListUtil.PlayingItemPositionChange() {
@@ -55,13 +57,12 @@ public class PagerWithListEventCallback implements XibaVideoPlayerEventCallback,
         });
     }
 
-    private PagerWithListFragment.ViewHolder holder;
+    private PagerWithRecyclerFragment.PagerWithRecyclerAdapter.PlayerViewHolder holder;
 
-    private PagerWithListFragment.ViewHolder nextHolder;
+    private PagerWithRecyclerFragment.PagerWithRecyclerAdapter.PlayerViewHolder nextHolder;
 
-    public void bindHolder(PagerWithListFragment.ViewHolder holder,
+    public void bindHolder(PagerWithRecyclerFragment.PagerWithRecyclerAdapter.PlayerViewHolder holder,
                            int fragmentIndex, int listPosition) {
-
         if (this.holder == null || mXibaPagerWithListUtil.isCurrentPlayingIndex(fragmentIndex, listPosition)) {
             this.holder = holder;
         } else {
@@ -69,7 +70,7 @@ public class PagerWithListEventCallback implements XibaVideoPlayerEventCallback,
         }
     }
 
-    public void changeHolder(){
+    public void changeHolder() {
         if (nextHolder != null) {
             holder = nextHolder;
 
@@ -77,7 +78,7 @@ public class PagerWithListEventCallback implements XibaVideoPlayerEventCallback,
         }
     }
 
-    public PagerWithListFragment.ViewHolder getHolder(){
+    public PagerWithRecyclerFragment.PagerWithRecyclerAdapter.PlayerViewHolder getHolder(){
         return holder;
     }
 

@@ -53,13 +53,13 @@ public abstract class XibaBaseListUtil {
         void prePlayingItemChangeOnPause();     //当播放器状态为暂停时，切换播放条目
     }
 
-    protected XibaListPlayUtil.PlayingItemPositionChange playingItemPositionChangeImpl;
+    protected PlayingItemPositionChange playingItemPositionChangeImpl;
 
     /**
      * 设置接口
      * @param playingItemPositionChangeImpl
      */
-    public void setPlayingItemPositionChangeImpl(XibaListPlayUtil.PlayingItemPositionChange playingItemPositionChangeImpl){
+    public void setPlayingItemPositionChangeImpl(PlayingItemPositionChange playingItemPositionChangeImpl){
         this.playingItemPositionChangeImpl = playingItemPositionChangeImpl;
     }
 
@@ -288,11 +288,11 @@ public abstract class XibaBaseListUtil {
         return mXibaVideoPlayer.isScreenLock();
     }
 
-    /**
-     * 获取当前播放索引
-     * @return
-     */
-    public abstract Object getPlayingIndex();
+//    /**
+//     * 获取当前播放索引
+//     * @return
+//     */
+//    public abstract Object getPlayingIndex();
 
     /**
      * 获取当前视频总时长

@@ -14,41 +14,55 @@
         android:id="@+id/ijk_demo_BN"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textAllCaps="false"
         android:text="IjkVideoPlayer Demo"/>
 
     <Button
         android:id="@+id/xiba_sample_demo_BN"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textAllCaps="false"
         android:text="XibaVideoPlayer Sample Demo"/>
 
     <Button
         android:id="@+id/orientation_demo_BN"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textAllCaps="false"
         android:text="Orientation Event Demo"/>
 
     <Button
         android:id="@+id/list_demo_BN"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textAllCaps="false"
         android:text="List Demo"/>
 
     <Button
         android:id="@+id/recyclerview_demo_BN"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textAllCaps="false"
         android:text="RecyclerView Demo"/>
 
     <Button
         android:id="@+id/viewpager_demo_BN"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textAllCaps="false"
         android:text="ViewPager Demo"/>
 
     <Button
         android:id="@+id/pager_with_list_BN"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textAllCaps="false"
         android:text="Pager With List Demo"/>
+
+    <Button
+        android:id="@+id/pager_with_recycler_BN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAllCaps="false"
+        android:text="Pager With Recycler Demo"/>
 </LinearLayout>

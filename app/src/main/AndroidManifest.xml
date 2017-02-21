@@ -42,6 +42,9 @@
 
         <activity android:name=".viewPagerWithListView.PagerWithListActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity android:name=".viewPagerWithRecyclerView.PagerWithRecyclerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
     </application>
 
 </manifest>

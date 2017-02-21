@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
+import com.axiba.xibavideoplayer.listUtils.XibaListUtil;
 import com.axiba.xibavideoplayer.sample.R;
 import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;
 
@@ -26,7 +27,7 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
 
     private PlayerPagerAdapter mAdapter;
 
-    private XibaListPlayUtil mXibaListPlayUtil;
+    private XibaListUtil mXibaListUtil;
 
     private PlayerPagerEventCallback  eventCallback;
     private PlayerFullScreenEventCallback mFScreenCallback;
@@ -49,9 +50,9 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
         mPager.setAdapter(mAdapter);
 
 
-        mXibaListPlayUtil = new XibaListPlayUtil(this);
+        mXibaListUtil = new XibaListUtil(this);
 
-        eventCallback = new PlayerPagerEventCallback(mXibaListPlayUtil);
+        eventCallback = new PlayerPagerEventCallback(mXibaListUtil);
 
         mFScreenCallback = new PlayerFullScreenEventCallback();
 
@@ -80,7 +81,7 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
 
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
-            mXibaListPlayUtil.removePlayer(position);
+            mXibaListUtil.removePlayer(position);
             super.destroyItem(container, position, object);
         }
 
@@ -109,18 +110,18 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
             mFullScreenContainer = new FullScreenContainer(ViewPagerDemoActivity.this);
 
             //初始化全屏控件
-            mFullScreenContainer.initUI(mXibaListPlayUtil.getXibaVideoPlayer());
+            mFullScreenContainer.initUI(mXibaListUtil.getXibaVideoPlayer());
 
-            mXibaListPlayUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
+            mXibaListUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
 
             //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
-            mXibaListPlayUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
+            mXibaListUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
 
             //全屏状态下，水平滑动改变播放位置
-            mXibaListPlayUtil.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
+            mXibaListUtil.setFullScreenHorizontalFeature(XibaVideoPlayer.SLIDING_HORIZONTAL_CHANGE_POSITION);
 
             //全屏状态下，水平滑动改变位置的总量为屏幕的 1/4
-            mXibaListPlayUtil.setHorizontalSlopInfluenceValue(4);
+            mXibaListUtil.setHorizontalSlopInfluenceValue(4);
             return mFullScreenContainer;
         }
 
@@ -132,13 +133,13 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
             playerFragment.resetUI();
 
             //绑定List的eventCallback
-            mXibaListPlayUtil.setEventCallback(eventCallback);
+            mXibaListUtil.setEventCallback(eventCallback);
 
         }
     }
 
-    public XibaListPlayUtil getXibaListPlayUtil(){
-        return mXibaListPlayUtil;
+    public XibaListUtil getXibaListUtil(){
+        return mXibaListUtil;
     }
 
     public PlayerPagerEventCallback getEventCallback(){
@@ -151,7 +152,7 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (mXibaListPlayUtil.onBackPress()) {
+        if (mXibaListUtil.onBackPress()) {
             return;
         }
         super.onBackPressed();
@@ -159,7 +160,7 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        mXibaListPlayUtil.release();
+        mXibaListUtil.release();
         super.onDestroy();
     }
 

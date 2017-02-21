@@ -144,10 +144,10 @@ public class XibaPagerWithListUtil extends XibaBaseListUtil {
         return mPlayingIndex.equals(targetIndex);
     }
 
-    @Override
-    public Object getPlayingIndex() {
-        return mPlayingIndex;
-    }
+//    @Override
+//    public Object getPlayingIndex() {
+//        return mPlayingIndex;
+//    }
 
     @Override
     protected void setPlayingIndex(Object targetIndex) {
