@@ -10,6 +10,7 @@ import com.axiba.xibavideoplayer.sample.listViewDemo.ListDemoActivity;
 import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
 import com.axiba.xibavideoplayer.sample.simpleDemo.SimpleDemoActivity;
 import com.axiba.xibavideoplayer.sample.viewPagerDemo.ViewPagerDemoActivity;
+import com.axiba.xibavideoplayer.sample.viewPagerWithListView.PagerWithListActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -21,6 +22,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button listBN;
     private Button recyclerviewDemoBN;
     private Button viewpagerDemoBN;
+    private Button pagerWithListBN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         listBN = (Button) findViewById(R.id.list_demo_BN);
         recyclerviewDemoBN = (Button) findViewById(R.id.recyclerview_demo_BN);
         viewpagerDemoBN = (Button) findViewById(R.id.viewpager_demo_BN);
+        pagerWithListBN = (Button) findViewById(R.id.pager_with_list_BN);
 
         ijkDemoBN.setOnClickListener(this);
         xibaSimpleDemoBN.setOnClickListener(this);
@@ -40,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         listBN.setOnClickListener(this);
         recyclerviewDemoBN.setOnClickListener(this);
         viewpagerDemoBN.setOnClickListener(this);
+        pagerWithListBN.setOnClickListener(this);
     }
 
 
@@ -65,6 +69,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.viewpager_demo_BN:
                 target = ViewPagerDemoActivity.class;
+                break;
+            case R.id.pager_with_list_BN:
+                target = PagerWithListActivity.class;
                 break;
 
         }

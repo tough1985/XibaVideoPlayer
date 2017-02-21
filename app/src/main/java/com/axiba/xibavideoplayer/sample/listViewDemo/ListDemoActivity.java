@@ -10,24 +10,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
-import com.axiba.xibavideoplayer.XibaListPlayUtil;
+import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.sample.R;
-import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
 import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 

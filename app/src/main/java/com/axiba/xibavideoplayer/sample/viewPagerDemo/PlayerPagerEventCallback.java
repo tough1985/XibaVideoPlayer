@@ -7,7 +7,7 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.axiba.xibavideoplayer.XibaListPlayUtil;
+import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.utils.XibaUtil;

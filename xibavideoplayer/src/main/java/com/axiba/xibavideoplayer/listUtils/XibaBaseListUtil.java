@@ -1,4 +1,4 @@
-package com.axiba.xibavideoplayer;
+package com.axiba.xibavideoplayer.listUtils;
 
 import android.app.Activity;
 import android.content.Context;
@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 
+import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
@@ -21,35 +22,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by xiba on 2016/12/13.
+ * Created by xiba on 2017/2/21.
  */
 
-public class XibaListPlayUtil {
-
+public abstract class XibaBaseListUtil {
     public static final String TAG = XibaListPlayUtil.class.getSimpleName();
 
     public static final String PLAYER_TAG_NO_CONTAINER = "";                 //没有父容器
     public static final String PLAYER_TAG_ITEM_CONTAINER = "itemContainer";  //父容器是itemContainer
     public static final String PLAYER_TAG_CONTENT_VIEW = "contentView";      //父容器是ContentView
 
-    private static final String KEY_ITEM_CONTAINER = "itemContainer";
-    private static final String KEY_EVENT_CALLBACK = "eventCallback";
-    private static final String KEY_POSITION = "position";
-    private static final String KEY_URL = "url";
-    private static final String KEY_LAST_STATE = "lastState";
+    protected static final String KEY_ITEM_CONTAINER = "itemContainer";
+    protected static final String KEY_EVENT_CALLBACK = "eventCallback";
+    protected static final String KEY_POSITION = "position";
+    protected static final String KEY_URL = "url";
+    protected static final String KEY_LAST_STATE = "lastState";
 
-    private static final int MSG_START_PLAY = 0;
+    protected static final int MSG_START_PLAY = 0;
 
-    private XibaVideoPlayer mXibaVideoPlayer;
+    protected XibaVideoPlayer mXibaVideoPlayer;
 
-    private int mPlayingPosition = -1;  //当前正在播放的item索引
+    protected Context context;
 
-    private SparseArray<PlayerStateInfo> stateInfoList;     //已经播放过的视频信息列表
-
-    private Context context;
-
-    private int mXibaVideoPlayerWidth;
-    private int mXibaVideoPlayerHeight;
+    protected int mXibaVideoPlayerWidth;
+    protected int mXibaVideoPlayerHeight;
 
     //切换播放条目接口
     public interface PlayingItemPositionChange{
@@ -57,35 +53,35 @@ public class XibaListPlayUtil {
         void prePlayingItemChangeOnPause();     //当播放器状态为暂停时，切换播放条目
     }
 
-    private PlayingItemPositionChange playingItemPositionChangeImpl;
+    protected XibaListPlayUtil.PlayingItemPositionChange playingItemPositionChangeImpl;
 
     /**
      * 设置接口
      * @param playingItemPositionChangeImpl
      */
-    public void setPlayingItemPositionChangeImpl(PlayingItemPositionChange playingItemPositionChangeImpl){
+    public void setPlayingItemPositionChangeImpl(XibaListPlayUtil.PlayingItemPositionChange playingItemPositionChangeImpl){
         this.playingItemPositionChangeImpl = playingItemPositionChangeImpl;
     }
 
-    private UtilHandler mUtilHandler;
+    protected UtilHandler mUtilHandler;
 
-    private boolean isStratFullScreen = false;
-    private boolean isStratTinyScreen = false;
+    protected boolean isStratFullScreen = false;
+    protected boolean isStratTinyScreen = false;
 
-    private XibaFullScreenEventCallback mFullScreenEventCallback;
-    private XibaTinyScreenEventCallback mTinyScreenEventCallback;
+    protected XibaFullScreenEventCallback mFullScreenEventCallback;
+    protected XibaTinyScreenEventCallback mTinyScreenEventCallback;
 
-    private Point mSize;
-    private float mX;
-    private float mY;
-    private boolean mCanMove;
+    protected Point mSize;
+    protected float mX;
+    protected float mY;
+    protected boolean mCanMove;
 
     /**
      * 此Handler用于切换播放条目的过程中，
      * 原来的播放控件完成UI逻辑处理
      * 并将焦点切换到目标播放位置的UI之后，发送消息到此handler，进行目标文件的播放
      */
-    private class UtilHandler extends Handler{
+    protected class UtilHandler extends Handler {
 
         @Override
         public void handleMessage(Message msg) {
@@ -96,11 +92,11 @@ public class XibaListPlayUtil {
                         Map<String, Object> msgObj = (Map<String, Object>) msg.obj;
                         ViewGroup itemContainer = (ViewGroup) msgObj.get(KEY_ITEM_CONTAINER);
                         XibaVideoPlayerEventCallback eventCallback = (XibaVideoPlayerEventCallback) msgObj.get(KEY_EVENT_CALLBACK);
-                        int position = (int) msgObj.get(KEY_POSITION);
+                        Object targetIndex = msgObj.get(KEY_POSITION);
                         String url = (String) msgObj.get(KEY_URL);
                         int lastState = (int) msgObj.get(KEY_LAST_STATE);
 
-                        startPlay(url, position, itemContainer, eventCallback, lastState);
+                        startPlay(url, targetIndex, itemContainer, eventCallback, lastState);
 
                     }
 
@@ -109,15 +105,13 @@ public class XibaListPlayUtil {
         }
     }
 
-    public XibaListPlayUtil(Context context) {
+    public XibaBaseListUtil(Context context) {
         this.context = context;
         init(context);
     }
 
-    private void init(Context context) {
+    protected void init(Context context) {
         mXibaVideoPlayer = new XibaVideoPlayer(context);
-        stateInfoList = new SparseArray<>();
-
         mUtilHandler = new UtilHandler();
     }
 
@@ -129,7 +123,7 @@ public class XibaListPlayUtil {
      * @param eventCallback
      * @param fullScreenEventCallback
      */
-    public void startFullScreen(String url, int position, ViewGroup itemContainer,
+    protected void startFullScreen(String url, Object position, ViewGroup itemContainer,
                                 XibaVideoPlayerEventCallback eventCallback,
                                 XibaFullScreenEventCallback fullScreenEventCallback){
 
@@ -140,7 +134,7 @@ public class XibaListPlayUtil {
 
         this.mFullScreenEventCallback = fullScreenEventCallback;
 
-        if (mPlayingPosition != position) {
+        if (!isPlayingIndex(position)) {
             isStratFullScreen = true;
             togglePlay(url, position, itemContainer, eventCallback);
         } else {
@@ -148,7 +142,7 @@ public class XibaListPlayUtil {
         }
     }
 
-    private void enterFullScreen(){
+    protected void enterFullScreen(){
         mXibaVideoPlayer.setFullScreenEventCallback(mFullScreenEventCallback);
         mXibaVideoPlayer.startFullScreen(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         mXibaVideoPlayer.setAutoRotate(false);
@@ -168,8 +162,8 @@ public class XibaListPlayUtil {
     /**
      * 进入小屏模式
      */
-//    private void startTinyScreen(XibaTinyScreenEventCallback tinyScreenEventCallback, Point size, float x, float y, boolean canMove){
-    private void startTinyScreen(){
+//    protected void startTinyScreen(XibaTinyScreenEventCallback tinyScreenEventCallback, Point size, float x, float y, boolean canMove){
+    protected void startTinyScreen(){
         mXibaVideoPlayer.setTinyScreenEventCallback(mTinyScreenEventCallback);
         mXibaVideoPlayer.startTinyScreen(mSize, mX, mY, mCanMove);
         savePlayerInfo();
@@ -178,7 +172,7 @@ public class XibaListPlayUtil {
     /**
      * 退出小屏
      */
-    private void quitTinyScreen(ViewGroup itemContainer){
+    protected void quitTinyScreen(ViewGroup itemContainer){
         if (itemContainer !=  null) {
             mXibaVideoPlayer.quitTinyScreen(itemContainer);
         } else {
@@ -192,7 +186,7 @@ public class XibaListPlayUtil {
     /**
      * 进入小屏或退出小屏
      * @param url   播放地址
-     * @param position  在列表中的位置
+     * @param targetIndex  在列表中的位置
      * @param itemContainer 播放器容器
      * @param eventCallback 回调事件接口
      * @param tinyScreenEventCallback 小屏相关事件接口
@@ -201,7 +195,7 @@ public class XibaListPlayUtil {
      * @param y 小屏y坐标
      * @param canMove   小屏是否可移动
      */
-    public void toggleTinyScreen(String url, int position, ViewGroup itemContainer,
+    protected void toggleTinyScreen(String url, Object targetIndex, ViewGroup itemContainer,
                                  XibaVideoPlayerEventCallback eventCallback,
                                  XibaTinyScreenEventCallback tinyScreenEventCallback,
                                  Point size, float x, float y, boolean canMove){
@@ -212,11 +206,11 @@ public class XibaListPlayUtil {
         this.mY = y;
         this.mCanMove = canMove;
 
-        if (mPlayingPosition != position) {
+        if (!isPlayingIndex(targetIndex)) {
 
             isStratTinyScreen = true;
 
-            togglePlay(url, position, itemContainer, eventCallback);
+            togglePlay(url, targetIndex, itemContainer, eventCallback);
 
 //            startTinyScreen(tinyScreenEventCallback, size, x, y, canMove);
         } else {
@@ -236,24 +230,24 @@ public class XibaListPlayUtil {
     /**
      * 跳转快进
      * @param url   播放地址
-     * @param position  在列表中的位置
+     * @param targetIndex  在列表中的位置
      * @param itemContainer 播放器容器
      * @param eventCallback 回调事件接口
      * @param progress
      * @param maxProgress
      */
-    public void seekTo(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
+    protected void seekTo(String url, Object targetIndex, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
                        int progress, int maxProgress){
         //如果当前播放索引不是目标播放索引，切换播放位置
-        if (mPlayingPosition != position) {
-            PlayerStateInfo stateInfo = stateInfoList.get(position);
+        if (!isPlayingIndex(targetIndex)) {
+            PlayerStateInfo stateInfo = getPlayingStateInfoByIndex(targetIndex);
             if (stateInfo != null) {
                 //根据进度百分比，得出目标位置
                 long seekPosition = stateInfo.getDuration() * progress / maxProgress;
                 stateInfo.setPosition(seekPosition);
             }
 
-            togglePlay(url, position, itemContainer, eventCallback);
+            togglePlay(url, targetIndex, itemContainer, eventCallback);
         } else {
             mXibaVideoPlayer.seekTo(progress);
         }
@@ -298,9 +292,7 @@ public class XibaListPlayUtil {
      * 获取当前播放索引
      * @return
      */
-    public int getPlayingIndex(){
-        return mPlayingPosition;
-    }
+    public abstract Object getPlayingIndex();
 
     /**
      * 获取当前视频总时长
@@ -410,19 +402,18 @@ public class XibaListPlayUtil {
      * 3.恢复播放 播放位置
      *
      * @param url
-     * @param position
+     * @param targetIndex
      * @param itemContainer
      * @param eventCallback
      */
-    public void togglePlay(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
+    protected void togglePlay(String url, Object targetIndex, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
 
 
 
-        if (mPlayingPosition != position) {
+        if (!isPlayingIndex(targetIndex)) {
 
             //如果播放器在小屏播放状态，先退出小屏状态
             if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY) {
-//                quitTinyScreen(itemContainer);
                 quitTinyScreen(null);
             }
 
@@ -433,17 +424,10 @@ public class XibaListPlayUtil {
 
             int lastState = mXibaVideoPlayer.getCurrentState();
 
-//            //如果播放器为播放状态，暂停播放器
-//            if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING
-//                    || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
-//                mXibaVideoPlayer.pausePlayer();
-//            }
-            
             /**
              * 先保存，删除，然后setUp播放器，最后再添加到itemContainer
              */
-//            removeFromList(lastState);
-            if (mPlayingPosition != -1) {
+            if (!isPlayingIndexNull()) {
 
                 if (playingItemPositionChangeImpl != null) {
 
@@ -455,14 +439,11 @@ public class XibaListPlayUtil {
                     Map<String, Object> msgObj = new HashMap<>();
                     msgObj.put(KEY_ITEM_CONTAINER, itemContainer);
                     msgObj.put(KEY_EVENT_CALLBACK, eventCallback);
-                    msgObj.put(KEY_POSITION, position);
+                    msgObj.put(KEY_POSITION, targetIndex);
                     msgObj.put(KEY_URL, url);
                     msgObj.put(KEY_LAST_STATE, lastState);
 
                     Message utilMsg = mUtilHandler.obtainMessage(MSG_START_PLAY, msgObj);
-
-//                    //调用播放位置变更接口
-//                    playingItemPositionChangeImpl.prePlayingItemPositionChange(utilMsg);
 
                     //如果播放器为播放状态，暂停播放器
                     if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PLAYING) {
@@ -474,7 +455,7 @@ public class XibaListPlayUtil {
                     } else if (mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
 
                         playingItemPositionChangeImpl.prePlayingItemChangeOnPause();
-                        startPlay(url, position, itemContainer, eventCallback, lastState);
+                        startPlay(url, targetIndex, itemContainer, eventCallback, lastState);
                     }
 
                 } else {
@@ -483,7 +464,7 @@ public class XibaListPlayUtil {
                             || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
                         mXibaVideoPlayer.pausePlayer();
                     }
-                    startPlay(url, position, itemContainer, eventCallback, lastState);
+                    startPlay(url, targetIndex, itemContainer, eventCallback, lastState);
                 }
 
             } else {
@@ -492,7 +473,7 @@ public class XibaListPlayUtil {
                         || mXibaVideoPlayer.getCurrentState() == XibaVideoPlayer.STATE_PAUSE) {
                     mXibaVideoPlayer.pausePlayer();
                 }
-                startPlay(url, position, itemContainer, eventCallback, lastState);
+                startPlay(url, targetIndex, itemContainer, eventCallback, lastState);
             }
         }
         else{
@@ -502,16 +483,16 @@ public class XibaListPlayUtil {
 
     }
 
-    private void startPlay(String url, int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback, int lastState){
+    protected void startPlay(String url, Object targetIndex, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback, int lastState){
 
         //将播放器从当前父容器中移出
         removePlayerFromParent(lastState);
 
         //设置播放索引为当前索引
-        mPlayingPosition = position;
+        setPlayingIndex(targetIndex);
 
         //如果有保存播放信息，恢复上次播放位置
-        PlayerStateInfo playerStateInfo = stateInfoList.get(position);
+        PlayerStateInfo playerStateInfo = getPlayingStateInfoByIndex(targetIndex);
         if (playerStateInfo != null) {
             mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
         } else {
@@ -534,18 +515,18 @@ public class XibaListPlayUtil {
 
     /**
      * 根据position和播放器的状态，来确定itemContainer中的内容
-     * @param position
+     * @param targetIndex
      * @param itemContainer
      * @param eventCallback
      * @return
      */
-    public PlayerStateInfo resolveItem(int position, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
+    protected PlayerStateInfo resolveItem(Object targetIndex, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
 
         if (itemContainer != null) {
 
-            PlayerStateInfo stateInfo = stateInfoList.get(position);
+            PlayerStateInfo stateInfo = getPlayingStateInfoByIndex(targetIndex);
 
-            if (stateInfo != null && stateInfo.getCurrentState() == XibaVideoPlayer.STATE_PAUSE && mPlayingPosition != position) {
+            if (stateInfo != null && stateInfo.getCurrentState() == XibaVideoPlayer.STATE_PAUSE && !isPlayingIndex(targetIndex)) {
                 //如果当期item为暂停状态，添加暂停图片
                 addCacheImageView(itemContainer, stateInfo.getCacheBitmap());
             } else {
@@ -553,7 +534,8 @@ public class XibaListPlayUtil {
                 removeCacheImageView(itemContainer);
             }
 
-            if (mPlayingPosition == position) {
+
+            if (isPlayingIndex(targetIndex)) {
                 //如果item为正在播放的item，将播放器添加到item中
                 if (itemContainer.indexOfChild(mXibaVideoPlayer) == -1) {
                     addToListItem(itemContainer, eventCallback);
@@ -583,7 +565,7 @@ public class XibaListPlayUtil {
 
         }
 
-        return stateInfoList.get(position);
+        return getPlayingStateInfoByIndex(targetIndex);
     }
 
     /**
@@ -599,7 +581,7 @@ public class XibaListPlayUtil {
                 ) {
             return;
         }
-        
+
         removeCacheImageView(itemContainer);    //移出itemContainer中的暂停图片
 
         ViewGroup parent = (ViewGroup) mXibaVideoPlayer.getParent();
@@ -625,8 +607,8 @@ public class XibaListPlayUtil {
 
     }
 
-    public void removePlayer(int position){
-        if (position == mPlayingPosition) {
+    protected void removePlayer(Object targetIndex){
+        if (isPlayingIndex(targetIndex)) {
             removePlayerFromParent();
             addToContentView();
         }
@@ -635,7 +617,7 @@ public class XibaListPlayUtil {
     /**
      * 将播放器从父容器中移出
      */
-    private void removePlayerFromParent(){
+    protected void removePlayerFromParent(){
 
         if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN
                 || mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY
@@ -664,7 +646,7 @@ public class XibaListPlayUtil {
      * 将播放器从父容器中移出
      * @param lastState 根据状态判断是否需要添加暂停图片
      */
-    private void removePlayerFromParent(int lastState){
+    protected void removePlayerFromParent(int lastState){
 
         if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN
                 || mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY
@@ -697,7 +679,7 @@ public class XibaListPlayUtil {
     /**
      * 将播放器添加到ContentView中
      */
-    private void addToContentView(){
+    protected void addToContentView(){
         if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN
                 || mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_TINY
                 ) {
@@ -724,7 +706,7 @@ public class XibaListPlayUtil {
      * 保存当前正在播放的播放器状态
      */
     public PlayerStateInfo savePlayerInfo(){
-        PlayerStateInfo playerStateInfo = stateInfoList.get(mPlayingPosition);
+        PlayerStateInfo playerStateInfo = getPlayingStateInfo();
 
         if (playerStateInfo == null) {
             playerStateInfo = new PlayerStateInfo();
@@ -736,16 +718,19 @@ public class XibaListPlayUtil {
         playerStateInfo.setPosition(mXibaVideoPlayer.getCurrentPositionWhenPlaying());
         playerStateInfo.setCurrentScreen(mXibaVideoPlayer.getCurrentScreen());
 
-        stateInfoList.put(mPlayingPosition, playerStateInfo);
+        setPlayingStateInfo(playerStateInfo);
+
         return playerStateInfo;
     }
+
+
 
     /**
      * 添加暂停时的缓存图片
      * @param itemContainer
      * @param cacheBitmap
      */
-    private void addCacheImageView(ViewGroup itemContainer, Bitmap cacheBitmap){
+    protected void addCacheImageView(ViewGroup itemContainer, Bitmap cacheBitmap){
 
         if (itemContainer == null) {
             return;
@@ -782,7 +767,7 @@ public class XibaListPlayUtil {
      * 移出暂停时的缓存图片
      * @param itemContainer
      */
-    private void removeCacheImageView(ViewGroup itemContainer){
+    protected void removeCacheImageView(ViewGroup itemContainer){
         if (itemContainer == null) {
             return;
         }
@@ -798,74 +783,48 @@ public class XibaListPlayUtil {
 
 
     /**
+     * 获取正在播放的播放器状态
+     * @return
+     */
+    protected abstract PlayerStateInfo getPlayingStateInfo();
+
+    /**
+     * 保存正在播放的播放器状态
+     * @param playerStateInfo
+     */
+    protected abstract void setPlayingStateInfo(PlayerStateInfo playerStateInfo);
+
+    /**
+     * 根据索引来获取播放信息
+     * @param targetIndex
+     * @return
+     */
+    protected abstract PlayerStateInfo getPlayingStateInfoByIndex(Object targetIndex);
+
+    /**
+     * 目标索引是否是正在播放的索引
+     * @param targetIndex
+     * @return true 是目标索引是正在播放的索引
+     */
+    protected abstract boolean isPlayingIndex(Object targetIndex);
+
+    /**
+     * 当前正在播放的索引是否为空，还没有播放过任何视频
+     * @return true 当前正在播放的索引为空
+     */
+    protected abstract boolean isPlayingIndexNull();
+
+    /**
+     * 设置目标索引
+     * @param targetIndex
+     * @return
+     */
+    protected abstract void setPlayingIndex(Object targetIndex);
+
+    /**
      * 释放资源
      */
-    public void release(){
-        mXibaVideoPlayer.release();
-        if (stateInfoList != null) {
-            for (int i = 0; i < stateInfoList.size(); i++) {
-                stateInfoList.get(stateInfoList.keyAt(i)).releaseBitmap();
-            }
-            stateInfoList = null;
-        }
-    }
+    public abstract void release();
 
-    public class PlayerStateInfo {
-        private int currentState;   //播放器当前状态
-        private long position;      //当前位置
-        private long duration;     //总时长
-        private Bitmap cacheBitmap; //暂停时的缓存图片
-        private int currentScreen;
-
-        public int getCurrentState() {
-            return currentState;
-        }
-
-        public void setCurrentState(int currentState) {
-            this.currentState = currentState;
-        }
-
-        public long getPosition() {
-            return position;
-        }
-
-        public void setPosition(long position) {
-            this.position = position;
-        }
-
-        public long getDuration() {
-            return duration;
-        }
-
-        public void setDuration(long duration) {
-            this.duration = duration;
-        }
-
-        public Bitmap getCacheBitmap() {
-            return cacheBitmap;
-        }
-
-        public void setCacheBitmap(Bitmap cacheBitmap) {
-            if (cacheBitmap != null) {
-                this.cacheBitmap = cacheBitmap.copy(Bitmap.Config.ARGB_8888, false);
-            } else {
-                this.cacheBitmap = null;
-            }
-        }
-
-        public void releaseBitmap(){
-            if (cacheBitmap != null) {
-                cacheBitmap.recycle();
-            }
-        }
-
-        public int getCurrentScreen() {
-            return currentScreen;
-        }
-
-        public void setCurrentScreen(int currentScreen) {
-            this.currentScreen = currentScreen;
-        }
-
-    }
 }
+

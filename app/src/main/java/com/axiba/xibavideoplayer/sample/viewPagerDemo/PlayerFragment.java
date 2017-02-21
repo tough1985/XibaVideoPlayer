@@ -4,7 +4,6 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,10 +14,9 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.axiba.xibavideoplayer.XibaListPlayUtil;
+import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.sample.R;
-import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**

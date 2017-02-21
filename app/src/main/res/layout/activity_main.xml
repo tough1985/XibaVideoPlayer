@@ -45,4 +45,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="ViewPager Demo"/>
+
+    <Button
+        android:id="@+id/pager_with_list_BN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pager With List Demo"/>
 </LinearLayout>

@@ -7,20 +7,12 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
 
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
-import com.axiba.xibavideoplayer.XibaListPlayUtil;
+import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.sample.R;
-import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
 import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;
 
 /**
@@ -90,7 +82,6 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
         public void destroyItem(ViewGroup container, int position, Object object) {
             mXibaListPlayUtil.removePlayer(position);
             super.destroyItem(container, position, object);
-
         }
 
         @Override
