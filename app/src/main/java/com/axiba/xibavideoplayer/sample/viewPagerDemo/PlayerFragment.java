@@ -15,7 +15,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.axiba.xibavideoplayer.listUtils.PlayerStateInfo;
-import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.listUtils.XibaListUtil;
 import com.axiba.xibavideoplayer.sample.R;

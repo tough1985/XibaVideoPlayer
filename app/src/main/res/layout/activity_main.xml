@@ -10,12 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.axiba.xibavideoplayer.sample.MainActivity">
 
-    <Button
-        android:id="@+id/ijk_demo_BN"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAllCaps="false"
-        android:text="IjkVideoPlayer Demo"/>
 
     <Button
         android:id="@+id/xiba_sample_demo_BN"
@@ -24,12 +18,6 @@
         android:textAllCaps="false"
         android:text="XibaVideoPlayer Sample Demo"/>
 
-    <Button
-        android:id="@+id/orientation_demo_BN"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAllCaps="false"
-        android:text="Orientation Event Demo"/>
 
     <Button
         android:id="@+id/list_demo_BN"

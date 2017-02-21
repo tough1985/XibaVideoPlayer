@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
-import com.axiba.xibavideoplayer.listUtils.XibaListPlayUtil;
 import com.axiba.xibavideoplayer.listUtils.XibaListUtil;
 import com.axiba.xibavideoplayer.sample.R;
 import com.axiba.xibavideoplayer.sample.view.FullScreenContainer;

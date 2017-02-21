@@ -26,7 +26,7 @@ import java.util.Map;
  */
 
 public abstract class XibaBaseListUtil {
-    public static final String TAG = XibaListPlayUtil.class.getSimpleName();
+    public static final String TAG = XibaBaseListUtil.class.getSimpleName();
 
     public static final String PLAYER_TAG_NO_CONTAINER = "";                 //没有父容器
     public static final String PLAYER_TAG_ITEM_CONTAINER = "itemContainer";  //父容器是itemContainer

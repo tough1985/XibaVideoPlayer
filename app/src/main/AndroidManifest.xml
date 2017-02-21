@@ -26,11 +26,6 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"/>
 
-        <activity android:name=".IjkDemoActivity"/>
-
-        <activity android:name=".OrientationEventActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"/>
-
         <activity android:name=".listViewDemo.ListDemoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
 
