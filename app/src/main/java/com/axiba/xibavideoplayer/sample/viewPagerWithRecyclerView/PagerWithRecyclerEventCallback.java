@@ -7,8 +7,6 @@ import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.listUtils.XibaBaseListUtil;
 import com.axiba.xibavideoplayer.listUtils.XibaPagerWithListUtil;
-import com.axiba.xibavideoplayer.sample.recyclerViewDemo.RecyclerViewDemoActivity;
-import com.axiba.xibavideoplayer.sample.viewPagerWithListView.PagerWithListFragment;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
 
 /**
@@ -160,53 +158,7 @@ public class PagerWithRecyclerEventCallback  implements XibaVideoPlayerEventCall
     }
 
     @Override
-    public void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration) {
-        int progress = (int) (seekTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
-        holder.progressSeek.setProgress(progress);
-    }
-
-    @Override
-    public void onChangingPositionEnd() {
-
-    }
-
-    @Override
-    public void onChangingVolume(int percent) {
-
-    }
-
-    @Override
-    public void onChangingVolumeEnd() {
-
-    }
-
-    @Override
-    public void onChangingBrightness(int percent) {
-
-    }
-
-    @Override
-    public void onChangingBrightnessEnd() {
-
-    }
-
-    @Override
     public void onPlayerError(int what, int extra) {
-
-    }
-
-    @Override
-    public void onSingleTap() {
-
-    }
-
-    @Override
-    public void onDoubleTap() {
-
-    }
-
-    @Override
-    public void onTouchLockedScreen() {
 
     }
 

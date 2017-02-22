@@ -445,44 +445,15 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration) {
-            int progress = (int) (seekTimePosition * 100 / (totalTimeDuration == 0 ? 1 : totalTimeDuration));   //播放进度
-            holder.progressSeek.setProgress(progress);
-        }
-
-        @Override
-        public void onChangingPositionEnd() {
-
-        }
-
-        @Override
-        public void onChangingVolume(int percent) {
-
-        }
-
-        @Override
-        public void onChangingVolumeEnd() {
-
-        }
-
-        @Override
-        public void onChangingBrightness(int percent) {
-
-        }
-
-        @Override
-        public void onChangingBrightnessEnd() {
-
-        }
-
-        @Override
         public void onPlayerError(int what, int extra) {
 
         }
 
         @Override
         public void onEnterTinyScreen() {
-
+            if (holder != null) {
+                holder.tinyscreenBN.setText("返回");
+            }
         }
 
         @Override
@@ -491,18 +462,6 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             if (holder != null) {
                 holder.tinyscreenBN.setText("小屏");
             }
-        }
-
-        @Override
-        public void onSingleTap() {
-        }
-
-        @Override
-        public void onDoubleTap() {
-        }
-
-        @Override
-        public void onTouchLockedScreen() {
         }
 
         @Override
@@ -535,7 +494,8 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
 //            initFullScreenUI();
             mFullScreenContainer.initUI(mXibaListUtil.getXibaVideoPlayer());
 
-            mXibaListUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
+            mXibaListUtil.setEventCallback(mFullScreenContainer.getFullScreenEventCallback());
+            mXibaListUtil.setPlayerActionEventCallback(mFullScreenContainer.getFullScreenEventCallback());
 
             //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
             mXibaListUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
@@ -561,7 +521,7 @@ public class RecyclerViewDemoActivity extends AppCompatActivity {
             }
             //绑定List的eventCallback
             mXibaListUtil.setEventCallback(mEventCallback);
-
+            mXibaListUtil.setPlayerActionEventCallback(null);
 
         }
 

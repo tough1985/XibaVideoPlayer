@@ -111,7 +111,8 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
             //初始化全屏控件
             mFullScreenContainer.initUI(mXibaListUtil.getXibaVideoPlayer());
 
-            mXibaListUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
+            mXibaListUtil.setEventCallback(mFullScreenContainer.getFullScreenEventCallback());
+            mXibaListUtil.setPlayerActionEventCallback(mFullScreenContainer.getFullScreenEventCallback());
 
             //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
             mXibaListUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
@@ -133,7 +134,7 @@ public class ViewPagerDemoActivity extends AppCompatActivity {
 
             //绑定List的eventCallback
             mXibaListUtil.setEventCallback(eventCallback);
-
+            mXibaListUtil.setPlayerActionEventCallback(null);
         }
     }
 

@@ -44,42 +44,66 @@ public interface XibaVideoPlayerEventCallback {
     void onPlayerAutoComplete();
 
     /**
+     * 出错回调
+     */
+    void onPlayerError(int what, int extra);
+
+    /**
      * 播放停止，播放器正在缓冲
      */
     void onStartLoading();
 
-    /**
-     * 进度变化回调
-     * @param seekTimePosition
-     * @param totalTimeDuration
-     */
-    void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration);
+//    /**
+//     * 滑动更改进度回调
+//     * @param originPosition    更改之前的播放位置
+//     * @param seekTimePosition  更改之后的播放位置
+//     * @param totalTimeDuration 总时长
+//     */
+//    void onChangingPosition(long originPosition, long seekTimePosition, long totalTimeDuration);
+//
+//    /**
+//     * 滑动更改进度结束
+//     */
+//    void onChangingPositionEnd();
+//
+//    /**
+//     * 调整音量回调
+//     * @param percent 更改后的音量百分比
+//     */
+//    void onChangingVolume(int percent);
+//
+//    /**
+//     * 音量变化结束
+//     */
+//    void onChangingVolumeEnd();
+//
+//    /**
+//     * 调整亮度回调
+//     * @param percent 更改后的亮度百分比
+//     */
+//    void onChangingBrightness(int percent);
+//
+//    /**
+//     * 亮度变化结束
+//     */
+//    void onChangingBrightnessEnd();
+//
+//    /**
+//     * 单击屏幕
+//     */
+//    void onSingleTap();
+//
+//    /**
+//     * 双击屏幕
+//     */
+//    void onDoubleTap();
+//
+//    /**
+//     * 点击被锁住的屏幕
+//     */
+//    void onTouchLockedScreen();
 
-    /**
-     * 滑动更改进度结束
-     */
-    void onChangingPositionEnd();
 
-    /**
-     * 调整音量回调
-     * @param percent 更改后的音量百分比
-     */
-    void onChangingVolume(int percent);
-
-    void onChangingVolumeEnd();
-
-    /**
-     * 调整亮度回调
-     * @param percent 更改后的亮度百分比
-     */
-    void onChangingBrightness(int percent);
-
-    void onChangingBrightnessEnd();
-
-    /**
-     * 出错回调
-     */
-    void onPlayerError(int what, int extra);
 
 //    /**
 //     * 进入全屏回调
@@ -101,20 +125,6 @@ public interface XibaVideoPlayerEventCallback {
 //     */
 //    void onQuitTinyScreen();
 
-    /**
-     * 单击屏幕
-     */
-    void onSingleTap();
-
-    /**
-     * 双击屏幕
-     */
-    void onDoubleTap();
-
-    /**
-     * 点击被锁住的屏幕
-     */
-    void onTouchLockedScreen();
 
 
 

@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
+import com.axiba.xibavideoplayer.eventCallback.XibaPlayerActionEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.sample.R;
@@ -27,7 +28,8 @@ import com.axiba.xibavideoplayer.utils.XibaUtil;
 /**
  * Created by xiba on 2016/11/26.
  */
-public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEventCallback, XibaFullScreenEventCallback, XibaTinyScreenEventCallback{
+public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEventCallback,
+        XibaFullScreenEventCallback, XibaTinyScreenEventCallback, XibaPlayerActionEventCallback{
 
     public static final String TAG = SimpleDemoActivity.class.getSimpleName();
 
@@ -100,12 +102,14 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
         horizontalFeatureNoneBN = (Button) findViewById(R.id.demo_horizontal_feature_none);
         horizontalFeatureChangePositionBN = (Button) findViewById(R.id.demo_horizontal_feature_change_position);
 
-        xibaVP.setUp(url, 0, new Object[]{});
+//        xibaVP.setUp(url, 0, new Object[]{});
+        xibaVP.setUp(url, 0);
         xibaVP.setEventCallback(this);
         xibaVP.setAutoRotate(true);
 
         xibaVP.setFullScreenEventCallback(this);
         xibaVP.setTinyScreenEventCallback(this);
+        xibaVP.setPlayerActionEventCallback(this);
 
         //初始化监听
         mStartButtonListener = new StartButtonListener();
@@ -376,7 +380,8 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 //            initFullScreenUI();
         mFullScreenContainer.initUI(xibaVP);
 
-        xibaVP.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
+        xibaVP.setEventCallback(mFullScreenContainer.getFullScreenEventCallback());
+        xibaVP.setPlayerActionEventCallback(mFullScreenContainer.getFullScreenEventCallback());
 
         //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
         xibaVP.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
@@ -399,6 +404,7 @@ public class SimpleDemoActivity extends Activity implements XibaVideoPlayerEvent
 
         //绑定List的eventCallback
         xibaVP.setEventCallback(SimpleDemoActivity.this);
+        xibaVP.setPlayerActionEventCallback(SimpleDemoActivity.this);
     }
 
     @Override

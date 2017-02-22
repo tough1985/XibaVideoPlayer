@@ -100,7 +100,8 @@ public class PagerWithListActivity extends AppCompatActivity {
             //初始化全屏控件
             mFullScreenContainer.initUI(mXibaPagerWithListUtil.getXibaVideoPlayer());
 
-            mXibaPagerWithListUtil.setEventCallback(mFullScreenContainer.geFullScreenEventCallback());
+            mXibaPagerWithListUtil.setEventCallback(mFullScreenContainer.getFullScreenEventCallback());
+            mXibaPagerWithListUtil.setPlayerActionEventCallback(mFullScreenContainer.getFullScreenEventCallback());
 
             //全屏状态下，垂直滑动左侧改变亮度，右侧改变声音
             mXibaPagerWithListUtil.setFullScreenVerticalFeature(XibaVideoPlayer.SLIDING_VERTICAL_LEFT_BRIGHTNESS);
@@ -122,7 +123,7 @@ public class PagerWithListActivity extends AppCompatActivity {
 
             //绑定List的eventCallback
             mXibaPagerWithListUtil.setEventCallback(mEventCallback);
-
+            mXibaPagerWithListUtil.setPlayerActionEventCallback(null);
         }
     }
 

@@ -12,6 +12,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
+import com.axiba.xibavideoplayer.eventCallback.XibaPlayerActionEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 import com.axiba.xibavideoplayer.sample.R;
 import com.axiba.xibavideoplayer.utils.XibaUtil;
@@ -151,7 +152,7 @@ public class FullScreenContainer extends FrameLayout {
 
     }
 
-    private class FullScreenEventCallback implements XibaVideoPlayerEventCallback {
+    private class FullScreenEventCallback implements XibaVideoPlayerEventCallback, XibaPlayerActionEventCallback {
 
         @Override
         public void onPlayerPrepare() {
@@ -385,7 +386,7 @@ public class FullScreenContainer extends FrameLayout {
         return isTrackingTouchSeekBar;
     }
 
-    public FullScreenEventCallback geFullScreenEventCallback(){
+    public FullScreenEventCallback getFullScreenEventCallback(){
         return mFullScreenEventCallback;
     }
 

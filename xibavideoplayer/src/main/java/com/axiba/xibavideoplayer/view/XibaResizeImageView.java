@@ -1,4 +1,4 @@
-package com.axiba.xibavideoplayer;
+package com.axiba.xibavideoplayer.view;
 
 import android.content.Context;
 import android.graphics.Point;

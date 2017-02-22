@@ -15,6 +15,7 @@ import android.widget.ImageView;
 
 import com.axiba.xibavideoplayer.XibaVideoPlayer;
 import com.axiba.xibavideoplayer.eventCallback.XibaFullScreenEventCallback;
+import com.axiba.xibavideoplayer.eventCallback.XibaPlayerActionEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 
@@ -384,6 +385,14 @@ public abstract class XibaBaseListUtil {
         }
     }
 
+    /**
+     * 设置动作事件相关回调接口
+     * @param actionEventCallback
+     */
+    public void setPlayerActionEventCallback(XibaPlayerActionEventCallback actionEventCallback){
+        mXibaVideoPlayer.setPlayerActionEventCallback(actionEventCallback);
+    }
+
     public boolean onBackPress(){
         if (mXibaVideoPlayer.getCurrentScreen() == XibaVideoPlayer.SCREEN_WINDOW_FULLSCREEN) {
             quitFullScreen();
@@ -496,7 +505,8 @@ public abstract class XibaBaseListUtil {
         if (playerStateInfo != null) {
             mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, playerStateInfo.getPosition(), playerStateInfo.getCacheBitmap());
         } else {
-            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
+//            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST, new Object() {});
+            mXibaVideoPlayer.setUp(url, XibaVideoPlayer.SCREEN_LIST);
         }
 
         addToListItem(itemContainer, eventCallback);    //添加到目标容器中
