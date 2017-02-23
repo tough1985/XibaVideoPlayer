@@ -83,7 +83,6 @@ public class PagerWithRecyclerActivity extends AppCompatActivity {
 
         @Override
         public void destroyItem(ViewGroup container, int fragmentIndex, Object object) {
-            //TODO
             mXibaPagerWithListUtil.removePlayer(fragmentIndex);
             super.destroyItem(container, fragmentIndex, object);
         }

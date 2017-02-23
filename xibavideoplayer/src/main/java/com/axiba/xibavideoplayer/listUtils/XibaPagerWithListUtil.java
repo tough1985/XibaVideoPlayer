@@ -13,6 +13,8 @@ import java.util.Iterator;
 
 /**
  * Created by xiba on 2017/2/21.
+ *
+ * 用于ViewPager结合ListView或RecyclerView使用
  */
 public class XibaPagerWithListUtil extends XibaBaseListUtil {
 

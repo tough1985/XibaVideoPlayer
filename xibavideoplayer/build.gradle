@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
 
 android {
     compileSdkVersion 24
@@ -37,4 +39,83 @@ dependencies {
     compile 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.7.4'
     //ExoPlayer as IMediaPlayer: optional, experimental
     //compile 'tv.danmaku.ijk.media:ijkplayer-exo:0.7.4'
+}
+
+group = 'com.axiba.xibavideoplayer'
+version = '1.0'
+
+def siteUrl = 'https://github.com/tough1985/XibaVideoPlayer'
+def gitUrl = 'https://github.com/tough1985/XibaVideoPlayer.git'
+
+//用户生成Maven的pom文件
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging 'aar'
+                name 'XibaVideoPlayer'
+                url siteUrl
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'axiba'
+                        name 'axiba'
+                        email '66903041@qq.com'
+                    }
+                }
+
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+//加载配置文件
+def bintrayProperties = new Properties()
+bintrayProperties.load(new FileInputStream(file("bintray.properties")))
+
+bintray {
+    user = bintrayProperties['bintray_user']
+    key = bintrayProperties['bintray_key']
+    configurations = ['archives']
+    pkg {
+        userOrg = bintrayProperties['bintray_userOrg']
+        repo = bintrayProperties['bintray_repo']
+        name = 'com.axiba.xibavideoplayer'
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ['Apache-2.0']
+        publish = true
+    }
 }

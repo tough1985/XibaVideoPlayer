@@ -10,7 +10,9 @@ import com.axiba.xibavideoplayer.eventCallback.XibaTinyScreenEventCallback;
 import com.axiba.xibavideoplayer.eventCallback.XibaVideoPlayerEventCallback;
 
 /**
- * Created by xiba on 2017/2/21.
+ * 用于播放器在ListView、RecyclerView或ViewPager中使用
+ * @author xiba
+ * @since 2017/2/21
  */
 
 public class XibaListUtil extends XibaBaseListUtil {
