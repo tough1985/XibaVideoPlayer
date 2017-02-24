@@ -29,11 +29,11 @@ public class XibaListUtil extends XibaBaseListUtil {
     /**
      * 全屏播放
      *
-     * @param url
-     * @param listPosition
-     * @param itemContainer
-     * @param eventCallback
-     * @param fullScreenEventCallback
+     * @param url   视频地址
+     * @param listPosition      在list中的索引
+     * @param itemContainer     播放器容器
+     * @param eventCallback     播放器事件回调
+     * @param fullScreenEventCallback   播放器全屏事件回调
      */
     public void startFullScreen(String url, int listPosition, ViewGroup itemContainer,
                                 XibaVideoPlayerEventCallback eventCallback,
@@ -47,10 +47,10 @@ public class XibaListUtil extends XibaBaseListUtil {
      * 进入小屏或退出小屏
      *
      * @param url                     播放地址
-     * @param listPosition
+     * @param listPosition            在list中的索引
      * @param itemContainer           播放器容器
-     * @param eventCallback           回调事件接口
-     * @param tinyScreenEventCallback 小屏相关事件接口
+     * @param eventCallback           播放器事件回调
+     * @param tinyScreenEventCallback 小屏相关事件回调
      * @param size                    小屏的尺寸
      * @param x                       小屏x坐标
      * @param y                       小屏y坐标
@@ -71,9 +71,9 @@ public class XibaListUtil extends XibaBaseListUtil {
      * @param url   播放地址
      * @param listPosition  播放器在list中的索引
      * @param itemContainer 播放器容器
-     * @param eventCallback 回调事件接口
-     * @param progress
-     * @param maxProgress
+     * @param eventCallback 播放器事件回调
+     * @param progress  播放进度
+     * @param maxProgress   视频进度最大值
      */
     public void seekTo(String url, int listPosition, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
                        int progress, int maxProgress){
@@ -83,10 +83,10 @@ public class XibaListUtil extends XibaBaseListUtil {
     /**
      * 切换播放状态
      *
-     * @param url
-     * @param listPosition
-     * @param itemContainer
-     * @param eventCallback
+     * @param url   播放地址
+     * @param listPosition  播放器在list中的索引
+     * @param itemContainer 播放器容器
+     * @param eventCallback 播放器事件回调
      */
     public void togglePlay(String url, int listPosition, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
         super.togglePlay(url, listPosition, itemContainer, eventCallback);
@@ -97,10 +97,10 @@ public class XibaListUtil extends XibaBaseListUtil {
     /**
      * 根据position和播放器的状态，来确定itemContainer中的内容
      *
-     * @param listPosition
-     * @param itemContainer
-     * @param eventCallback
-     * @return
+     * @param listPosition  播放器在list中的索引
+     * @param itemContainer 播放器容器
+     * @param eventCallback 播放器事件回调
+     * @return 播放状态
      */
     public PlayerStateInfo resolveItem( int listPosition, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
 
@@ -109,7 +109,7 @@ public class XibaListUtil extends XibaBaseListUtil {
 
     /**
      * 移出播放器
-     * @param listPosition
+     * @param listPosition  播放器在list中的索引
      */
     public void removePlayer(int listPosition){
 

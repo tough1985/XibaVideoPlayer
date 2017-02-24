@@ -45,6 +45,8 @@ public interface XibaVideoPlayerEventCallback {
 
     /**
      * 出错回调
+     * @param what 错误类型
+     * @param extra 错误信息
      */
     void onPlayerError(int what, int extra);
 

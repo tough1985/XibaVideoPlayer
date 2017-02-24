@@ -135,7 +135,7 @@ public class OrientationUtils {
 
     /**
      * 设置是否可用
-     * @param enable
+     * @param enable true为可用
      */
     public void setEnable(boolean enable){
         if (enable) {

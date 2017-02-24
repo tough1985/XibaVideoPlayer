@@ -194,9 +194,9 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
     /**
      * 通知Media线程，准备播放器
      *
-     * @param url
-     * @param mapHeadData
-     * @param loop
+     * @param url   播放地址
+     * @param mapHeadData   设置的参数
+     * @param loop  是否循环播放
      */
     public void prepare(String url, final Map<String, String> mapHeadData, boolean loop) {
         if (TextUtils.isEmpty(url)) {
@@ -219,7 +219,7 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
     /**
      * 通知Media线程，给播放器设置surface
      *
-     * @param surface
+     * @param surface 播放器绘制需要的surface
      */
     public void setDisplay(Surface surface) {
         mMediaHandler.obtainMessage(MESSAGE_SET_DISPLAY, surface).sendToTarget();
@@ -227,6 +227,7 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
 
     /**
      * 获取视频尺寸
+     * @return 视频的宽和高
      */
     public Point getVideoSize() {
         if (currentVideoWidth != 0 && currentVideoHeigth != 0) {
@@ -273,7 +274,9 @@ public class XibaMediaManager implements IMediaPlayer.OnPreparedListener,
                         mediaPlayer = new IjkMediaPlayer();
                         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
-                        mediaPlayer.setDataSource(((VideoSource) msg.obj).getUrl(), ((VideoSource) msg.obj).getMapHeadData());
+                        VideoSource source = (VideoSource) msg.obj;
+                        mediaPlayer.setDataSource(source.getUrl(), source.getMapHeadData());
+                        mediaPlayer.setLooping(source.isLooping());
 
                         //添加监听
                         mediaPlayer.setOnPreparedListener(XibaMediaManager.this);

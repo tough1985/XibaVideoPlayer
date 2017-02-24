@@ -35,12 +35,12 @@ public class XibaPagerWithListUtil extends XibaBaseListUtil {
     /**
      * 全屏播放
      *
-     * @param url
-     * @param fragmentIndex
-     * @param listPosition
-     * @param itemContainer
-     * @param eventCallback
-     * @param fullScreenEventCallback
+     * @param url                     播放地址
+     * @param fragmentIndex           fragment在ViewPager中的索引
+     * @param listPosition            播放器在list中的索引
+     * @param itemContainer           播放器容器
+     * @param eventCallback           回调事件接口
+     * @param fullScreenEventCallback   播放器全屏事件回调
      */
     public void startFullScreen(String url, int fragmentIndex, int listPosition, ViewGroup itemContainer,
                                 XibaVideoPlayerEventCallback eventCallback,
@@ -56,8 +56,8 @@ public class XibaPagerWithListUtil extends XibaBaseListUtil {
      * 进入小屏或退出小屏
      *
      * @param url                     播放地址
-     * @param fragmentIndex
-     * @param listPosition
+     * @param fragmentIndex           fragment在ViewPager中的索引
+     * @param listPosition            播放器在list中的索引
      * @param itemContainer           播放器容器
      * @param eventCallback           回调事件接口
      * @param tinyScreenEventCallback 小屏相关事件接口
@@ -81,12 +81,12 @@ public class XibaPagerWithListUtil extends XibaBaseListUtil {
     /**
      * 跳转快进
      * @param url   播放地址
-     * @param fragmentIndex fragment的索引
+     * @param fragmentIndex fragment在ViewPager中的索引
      * @param listPosition  播放器在list中的索引
      * @param itemContainer 播放器容器
      * @param eventCallback 回调事件接口
-     * @param progress
-     * @param maxProgress
+     * @param progress  播放进度
+     * @param maxProgress   视频进度最大值
      */
     public void seekTo(String url, int fragmentIndex, int listPosition, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback,
                        int progress, int maxProgress){
@@ -97,11 +97,11 @@ public class XibaPagerWithListUtil extends XibaBaseListUtil {
     /**
      * 切换播放状态
      *
-     * @param url
-     * @param fragmentIndex
-     * @param listPosition
-     * @param itemContainer
-     * @param eventCallback
+     * @param url   播放地址
+     * @param fragmentIndex fragment在ViewPager中的索引
+     * @param listPosition  播放器在list中的索引
+     * @param itemContainer 播放器容器
+     * @param eventCallback 播放器事件回调
      */
     public void togglePlay(String url, int fragmentIndex, int listPosition, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
         PagerWithListPlayerIndex targetIndex = new PagerWithListPlayerIndex(fragmentIndex, listPosition);
@@ -113,11 +113,11 @@ public class XibaPagerWithListUtil extends XibaBaseListUtil {
     /**
      * 根据position和播放器的状态，来确定itemContainer中的内容
      *
-     * @param fragmentIndex
-     * @param listPosition
-     * @param itemContainer
-     * @param eventCallback
-     * @return
+     * @param fragmentIndex fragment在ViewPager中的索引
+     * @param listPosition  播放器在list中的索引
+     * @param itemContainer 播放器容器
+     * @param eventCallback 播放器事件回调
+     * @return  播放状态
      */
     public PlayerStateInfo resolveItem(int fragmentIndex, int listPosition, ViewGroup itemContainer, XibaVideoPlayerEventCallback eventCallback) {
         PagerWithListPlayerIndex targetIndex = new PagerWithListPlayerIndex(fragmentIndex, listPosition);
@@ -127,7 +127,7 @@ public class XibaPagerWithListUtil extends XibaBaseListUtil {
 
     /**
      * 只要fragmentIndex相同，就移出播放器
-     * @param fragmentIndex
+     * @param fragmentIndex fragment在ViewPager中的索引
      */
     public void removePlayer(int fragmentIndex){
 

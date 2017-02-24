@@ -21,8 +21,8 @@ public class XibaUtil {
     /**
      * 将毫秒数转化为字符串格式的时长
      *
-     * @param timeMs
-     * @return
+     * @param timeMs 目标毫秒数
+     * @return 转换后的字符串
      */
     public static String stringForTime(long timeMs) {
         if (timeMs <= 0 || timeMs >= 24 * 60 * 60 * 1000) {
@@ -47,7 +47,7 @@ public class XibaUtil {
     /**
      * wifi是否连接
      *
-     * @param context
+     * @param context   上下文
      * @return true 已连接; false wifi未连接
      */
     public static boolean isWifiConnected(Context context) {
@@ -77,7 +77,7 @@ public class XibaUtil {
     /**
      * Get AppCompatActivity from context
      *
-     * @param context
+     * @param context   上下文
      * @return AppCompatActivity if it's not null
      */
     public static AppCompatActivity getAppCompActivity(Context context) {

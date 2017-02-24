@@ -263,10 +263,9 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     /**
      * 设置视频源
      *
-     * @param url
-     * @param screen
-//     * @param objects
-     * @return
+     * @param url       视频地址
+     * @param screen    屏幕类型
+     * @return  true为设置成功，false为设置失败
      */
 //    public boolean setUp(String url, int screen, Object... objects) {
     public boolean setUp(String url, int screen) {
@@ -301,7 +300,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * @param screen    屏幕类型
      * @param position  播放位置
      * @param cacheBitmap  起始播放时显示的图片，主要用于List中，从暂停状态重新播放时使用
-     * @return
+     * @return    true为设置成功，false为设置失败
      */
     public boolean setUp(String url, int screen, long position, Bitmap cacheBitmap) {
         if (TextUtils.isEmpty(url) && TextUtils.equals(this.url, url)) {
@@ -339,7 +338,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     /**
      * 设置播放器回调
      *
-     * @param eventCallback
+     * @param eventCallback 播放器事件回调接口实现类
      */
     public void setEventCallback(XibaVideoPlayerEventCallback eventCallback) {
         this.eventCallback = eventCallback;
@@ -347,7 +346,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 设置全屏事件相关回调接口
-     * @param fullScreenEventCallback
+     * @param fullScreenEventCallback 全屏事件回调接口实现类
      */
     public void setFullScreenEventCallback(XibaFullScreenEventCallback fullScreenEventCallback){
         this.mFScreenEventCallback = fullScreenEventCallback;
@@ -355,7 +354,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 设置小屏事件相关回调接口
-     * @param tinyScreenEventCallback
+     * @param tinyScreenEventCallback 小屏事件回调接口实现类
      */
     public void setTinyScreenEventCallback(XibaTinyScreenEventCallback tinyScreenEventCallback){
         this.mTScreenEventCallback = tinyScreenEventCallback;
@@ -363,7 +362,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 设置动作事件相关回调接口
-     * @param playerActionEventCallback
+     * @param playerActionEventCallback 动作事件回调接口实现类
      */
     public void setPlayerActionEventCallback(XibaPlayerActionEventCallback playerActionEventCallback){
         this.mActionEventCallback = playerActionEventCallback;
@@ -498,7 +497,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 指定位置开始播放
-     * @param progress
+     * @param progress  目标进度
      */
     public void seekTo(int progress){
         if (XibaMediaManager.getInstance().getMediaPlayer() != null) {
@@ -942,6 +941,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     /**
      * 全屏播放
      * 使用全屏播放必须在XibaVideoPlayerEventCallback中
+     * @param orientation 仅支持横屏ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+     *                    或镜像横屏ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE两个值
      */
     public void startFullScreen(int orientation){
 //    public void startFullScreen(final boolean hasActionBar, final boolean hasStatusBar){
@@ -1085,6 +1086,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * @param size 小屏的尺寸
      * @param x 小屏左上角的x坐标
      * @param y 小屏左上角的y坐标
+     * @param canMove 小屏幕是否可以移动 true为可移动
      */
     public void startTinyScreen(Point size, float x, float y, boolean canMove){
         if (mCurrentScreen == SCREEN_WINDOW_TINY || mCurrentScreen == SCREEN_WINDOW_FULLSCREEN) {
@@ -1257,7 +1259,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获得当前状态
-     * @return
+     * @return 返回当前播放器的状态
      */
     public int getCurrentState(){
         return mCurrentState;
@@ -1265,7 +1267,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获得当前屏幕状态
-     * @return
+     * @return 返回当前屏幕的状态
      */
     public int getCurrentScreen(){
         return mCurrentScreen;
@@ -1274,7 +1276,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获取锁屏状态
-     * @return
+     * @return  当前播放器是否锁屏，true为锁屏状态
      */
     public boolean isScreenLock() {
         return mIsScreenLocked;
@@ -1301,8 +1303,8 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     }
 
     /**
-     * 设置是否自动选择屏幕
-     * @param autoRotate
+     * 设置是否自动旋转屏幕
+     * @param autoRotate true为自动旋转屏幕
      */
     public void setAutoRotate(boolean autoRotate){
         mOrientationUtils.setAutoRotate(autoRotate);
@@ -1366,7 +1368,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 设置全屏状态下，水平滑动屏幕时的功能
-     * @param fullScreenHorizontalFeature
+     * @param fullScreenHorizontalFeature {@link #SLIDING_HORIZONTAL_NONE}
      */
     public void setFullScreenHorizontalFeature(int fullScreenHorizontalFeature) {
         this.mFullScreenHorizontalFeature = fullScreenHorizontalFeature;
@@ -1374,7 +1376,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获取水平滑动影响值
-     * @return
+     * @return 返回当前水平滑动影响值
      */
     public int getHorizontalSlopInfluenceValue() {
         return mHorizontalSlopInfluenceValue;
@@ -1385,7 +1387,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
      * 例如参数为2，那么滑动整个屏幕改变整个播放器时长的一半
      * 参数需要大于0的整数，传入参数如果小于等于0，自动将参数修改为1
      * 推荐在onPlayerPrepare事件中，获取视频长度之后，根据需求修改此参数
-     * @param horizontalSlopInfluenceValue
+     * @param horizontalSlopInfluenceValue 目标水平滑动的影响值
      */
     public void setHorizontalSlopInfluenceValue(int horizontalSlopInfluenceValue) {
         this.mHorizontalSlopInfluenceValue = horizontalSlopInfluenceValue <= 0 ? 1 : horizontalSlopInfluenceValue;
@@ -1691,7 +1693,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
 
     /**
      * 获取当前播放位置
-     * @return
+     * @return 当前播放位置
      */
     public long getCurrentPositionWhenPlaying() {
         long position = 0;
@@ -1707,7 +1709,7 @@ public class XibaVideoPlayer extends FrameLayout implements TextureView.SurfaceT
     }
     /**
      * 获取视频时长
-     * @return
+     * @return 视频总时长
      */
     public long getDuration(){
         long duration = 0;
