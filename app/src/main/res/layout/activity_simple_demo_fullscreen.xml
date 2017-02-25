@@ -1,28 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    >
+    <ImageButton
+        android:id="@+id/demo_play_IB"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center"
+        android:background="@android:color/transparent"
+        android:src="@drawable/play_selector"
+        android:scaleType="fitCenter"/>
 
-    <Button
-        android:id="@+id/demo_play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|center_horizontal"
-        android:text="播放"/>
-
-    <Button
-        android:id="@+id/back_to_normal_BN"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:id="@+id/back_to_normal_IB"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="top|left"
-        android:text="返回"/>
+        android:background="@android:color/transparent"
+        android:src="@drawable/navigate_back_selector"
+        android:scaleType="fitCenter"/>
+    
 
-    <Button
-        android:id="@+id/lock_screen_BN"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:id="@+id/lock_screen_IB"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:padding="8dp"
         android:layout_gravity="top|right"
-        android:text="锁屏"/>
+        android:background="@android:color/transparent"
+        android:src="@drawable/lock_open_selector"
+        android:scaleType="fitCenter"/>
 
     <RelativeLayout
         android:id="@+id/full_screen_bottom_container_RL"

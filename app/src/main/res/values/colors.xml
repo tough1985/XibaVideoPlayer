@@ -6,4 +6,7 @@
 
     <color name="infoWindowBG">#88000000</color>
 
+    <color name="bn_normal">#BBFFFFFF</color>
+    <color name="bn_pressed">#88CCCCCC</color>
+
 </resources>
